@@ -826,6 +826,38 @@ export const LeftPanel = memo(function LeftPanel({
 		[stableProjects],
 	);
 	const [dragProject, setDragProject] = useState<string | null>(null);
+	/**
+	 * 拖拽项目时「插入点在目标上方还是下方」的分界线（y 坐标）。
+	 * 用项目标题行的中线，而不是整个节点：节点里可能展开着几十行会话，
+	 * 拿整节点算会让阈值远离标题，指示线看起来忽上忽下。
+	 */
+	function projectDropSplitY(node: HTMLElement, clientY: number): number {
+		const head = node.querySelector<HTMLElement>(".lp-project-head-row");
+		const rect = (head ?? node).getBoundingClientRect();
+		// 光标落在标题行之外（比如展开的会话区）时，按它在标题行的上方/下方定夺，
+		// 避免一直判成 after。
+		if (clientY < rect.top) return rect.top;
+		if (clientY > rect.bottom) return rect.top;
+		return rect.top + rect.height / 2;
+	}
+
+	/**
+	 * 指示线对准「分割线」，并保证在整数像素边界上绘制。
+	 * 分割线（1px）位于 edge 处：下方线取下一项的 top（无下一项则本项底边），
+	 * 上方线取本项的 top。2px 线覆盖 [edge-1, edge+1)，即分割线加上它上方 1px。
+	 * 线中心若落在半像素上会被抗锯齿成 3 行淡色像素，看起来变细，所以 edge 先取整。
+	 */
+	function setDropLineOffsets(node: HTMLElement, after: boolean): void {
+		const r = node.getBoundingClientRect();
+		const padTop = r.top + node.clientTop;
+		let edge = r.top;
+		if (after) {
+			const next = node.nextElementSibling as HTMLElement | null;
+			edge = next ? next.getBoundingClientRect().top : r.bottom;
+		}
+		node.style.setProperty("--lp-drop-top", `${Math.round(edge) - 1 - padTop}px`);
+	}
+
 	const [dropHint, setDropHint] = useState<{ path: string; after: boolean } | null>(null);
 
 	const effectiveProjects = stableProjects;
@@ -3063,16 +3095,19 @@ export const LeftPanel = memo(function LeftPanel({
 													if (!dragProject || dragProject === p.path) return;
 													e.preventDefault();
 													e.dataTransfer.dropEffect = "move";
-													const r = e.currentTarget.getBoundingClientRect();
-													const after = e.clientY > r.top + Math.min(r.height, 32) / 2;
+													// 项目节点含展开的会话行，高度可能几百 px：拿整节点算阈值（还封顶 32px）
+													// 会让光标刚进项目中部就判成 after，指示线一下跳到项目底部，
+													// 看起来就是「往上一点偏上、往下一点偏下」。按标题行判定才跟手。
+													const after = e.clientY > projectDropSplitY(e.currentTarget, e.clientY);
+													const node = e.currentTarget as HTMLElement;
+													setDropLineOffsets(node, after);
 													if (dropHint?.path !== p.path || dropHint.after !== after)
 														setDropHint({ path: p.path, after });
 												}}
 												onDrop={(e) => {
 													if (!dragProject) return;
 													e.preventDefault();
-													const r = e.currentTarget.getBoundingClientRect();
-													moveProject(dragProject, p.path, e.clientY > r.top + Math.min(r.height, 32) / 2);
+													moveProject(dragProject, p.path, e.clientY > projectDropSplitY(e.currentTarget, e.clientY));
 													setDragProject(null);
 													setDropHint(null);
 												}}
