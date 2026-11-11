@@ -895,11 +895,32 @@ export interface ClientState {
 	defaultProviderKeys?: Record<string, string>;
 	markers?: MarkerSettings;
 	pinnedSessions?: Record<string, string[]>;
+	/** 左栏项目排位（归一化路径，按显示顺序）。放全局设置里：跨窗口、跨 origin、跨设备一致。 */
+	projectOrder?: string[];
 	sessionTitles?: Record<string, Record<string, string>>;
 	locale?: string;
 	engine?: EngineId;
 	defaultEngine?: EngineId;
 	lastActive?: number;
+}
+
+/**
+ * 把一个项目标成「刚用过」：已在列表里就原位更新 lastUsed（顺序不动），
+ * 不在列表里才插到最前。左侧栏顺序由用户拖拽决定，不该被「最近打开」冲掉。
+ */
+function promoteProject(
+	list: { path: string; lastUsed: number }[],
+	cwd: string,
+	now: number,
+	targetKey: string,
+): { path: string; lastUsed: number }[] {
+	const next = [...list];
+	const idx = next.findIndex((p) => normalizePathKey(p.path) === targetKey);
+	if (idx >= 0) {
+		next[idx] = { path: cwd, lastUsed: now };
+		return next;
+	}
+	return [{ path: cwd, lastUsed: now }, ...next].slice(0, RECENT_PROJECTS_MAX);
 }
 
 export function normalizePathKey(p: string): string {
@@ -1082,16 +1103,12 @@ export class ClientStateStore {
 		state.lastCwd = cwd;
 		const now = Date.now();
 		const targetKey = normalizePathKey(cwd);
-		state.projects = [
-			{ path: cwd, lastUsed: now },
-			...state.projects.filter((p) => normalizePathKey(p.path) !== targetKey),
-		].slice(0, RECENT_PROJECTS_MAX);
+		// 顺序锁定：已在列表里的项目只更新 lastUsed，位置不动 —— 切项目不该让左栏
+		// 跳顺序（排位由用户在侧栏拖出来，见 `setProjectOrder`）。新项目才插到最前。
+		state.projects = promoteProject(state.projects, cwd, now, targetKey);
 		// Also persist in global settings so new tabs and sessions inherit it immediately
 		const globalState = (all[ClientStateStore.GLOBAL_SETTINGS_KEY] ??= { projects: [] });
-		globalState.projects = [
-			{ path: cwd, lastUsed: now },
-			...(globalState.projects ?? []).filter((p) => normalizePathKey(p.path) !== targetKey),
-		].slice(0, RECENT_PROJECTS_MAX);
+		globalState.projects = promoteProject(globalState.projects ?? [], cwd, now, targetKey);
 		// Opening the workspace again clears its removal tombstone across all clients and global settings.
 		for (const cState of Object.values(all)) {
 			if (cState.removedProjects?.length) {
@@ -1846,6 +1863,33 @@ export class ClientStateStore {
 		const all = this.load();
 		const state = (all[ClientStateStore.GLOBAL_SETTINGS_KEY] ??= { projects: [] });
 		(state.defaultProviderKeys ??= {})[provider] = keyName;
+		this.save();
+	}
+
+	/** 左栏项目排位：归一化路径数组，按显示顺序。空数组表示还没排过。 */
+	getProjectOrder(): string[] {
+		const order = this.load()[ClientStateStore.GLOBAL_SETTINGS_KEY]?.projectOrder;
+		return Array.isArray(order) ? order.filter((p) => typeof p === "string" && p.length > 0) : [];
+	}
+
+	/** 写项目排位：去重、归一、截断，存在全局设置里（和 pinnedSessions 同级）。 */
+	setProjectOrder(paths: string[]): void {
+		const all = this.load();
+		const state = (all[ClientStateStore.GLOBAL_SETTINGS_KEY] ??= { projects: [] });
+		const seen = new Set<string>();
+		const next: string[] = [];
+		for (const path of paths) {
+			const raw = String(path ?? "").trim();
+			// 空串不能交给 normalizePathKey：resolve("") 会变成当前工作目录，混进排位里。
+			if (!raw) continue;
+			const key = normalizePathKey(raw);
+			if (!key || seen.has(key)) continue;
+			seen.add(key);
+			next.push(key);
+			if (next.length >= RECENT_PROJECTS_MAX) break;
+		}
+		if (next.length === 0) delete state.projectOrder;
+		else state.projectOrder = next;
 		this.save();
 	}
 

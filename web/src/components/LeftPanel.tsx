@@ -93,6 +93,7 @@ interface LeftPanelProps {
 			| { type: "new_chat" }
 			| { type: "list_sessions"; path?: string; limit?: number }
 			| { type: "list_projects" }
+			| { type: "reorder_projects"; paths: string[] }
 			| { type: "switch_session"; path: string }
 			| { type: "switch_conversation"; id: string }
 			| { type: "set_cwd"; path: string }
@@ -713,39 +714,41 @@ export const LeftPanel = memo(function LeftPanel({
 		return list;
 	}, [projects, currentCwd, conversations, elsewhere, activeConversationId]);
 
-	const projectRankMapRef = useRef<Map<string, number>>(new Map());
-	const [projectOrderVersion, setProjectOrderVersion] = useState(0);
+	// 项目排位以服务端为准（全局 `__settings__.projectOrder`）：两个窗口哪怕一个用
+	// localhost、一个用 127.0.0.1（localStorage 不同源、不共享），顺序也一致。
+	// 拖动时先乐观更新本地顺序，等下一次 projects 快照回来再对齐。
+	const [optimisticOrder, setOptimisticOrder] = useState<string[] | null>(null);
+	useEffect(() => {
+		setOptimisticOrder(null);
+	}, [projects]);
 
 	const stableProjects = useMemo(() => {
-		const rankMap = projectRankMapRef.current;
-		let maxRank = 0;
-		for (const r of rankMap.values()) if (r > maxRank) maxRank = r;
-		const newcomers = deduplicatedProjects.filter((p) => !rankMap.has(normalizeSessionPathKey(p.path)));
-		newcomers.sort((a, b) => (b.lastUsed ?? 0) - (a.lastUsed ?? 0));
-		for (const p of newcomers) rankMap.set(normalizeSessionPathKey(p.path), ++maxRank);
-		return [...deduplicatedProjects].sort(
-			(a, b) =>
-				(rankMap.get(normalizeSessionPathKey(a.path)) ?? 0) - (rankMap.get(normalizeSessionPathKey(b.path)) ?? 0),
-		);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [deduplicatedProjects, projectOrderVersion]);
+		if (!optimisticOrder) return deduplicatedProjects;
+		const rank = new Map<string, number>();
+		optimisticOrder.forEach((path, i) => rank.set(normalizeSessionPathKey(path), i));
+		return [...deduplicatedProjects].sort((a, b) => {
+			const ra = rank.get(normalizeSessionPathKey(a.path));
+			const rb = rank.get(normalizeSessionPathKey(b.path));
+			if (ra !== undefined && rb !== undefined) return ra - rb;
+			if (ra !== undefined) return -1;
+			if (rb !== undefined) return 1;
+			return 0;
+		});
+	}, [deduplicatedProjects, optimisticOrder]);
 
 	const moveProject = useCallback(
 		(fromPath: string, toPath: string, after: boolean) => {
 			const from = normalizeSessionPathKey(fromPath);
 			const to = normalizeSessionPathKey(toPath);
 			if (from === to) return;
-			const keys = stableProjects.map((p) => normalizeSessionPathKey(p.path)).filter((k) => k !== from);
-			const idx = keys.indexOf(to);
+			const paths = stableProjects.map((p) => p.path).filter((p) => normalizeSessionPathKey(p) !== from);
+			const idx = paths.map((p) => normalizeSessionPathKey(p)).indexOf(to);
 			if (idx < 0) return;
-			keys.splice(after ? idx + 1 : idx, 0, from);
-			const rankMap = projectRankMapRef.current;
-			let r = 0;
-			for (const k of keys) rankMap.set(k, ++r);
-			for (const [k, v] of rankMap) if (!keys.includes(k)) rankMap.set(k, r + v);
-			setProjectOrderVersion((v) => v + 1);
+			paths.splice(after ? idx + 1 : idx, 0, fromPath);
+			setOptimisticOrder(paths);
+			panelSend({ type: "reorder_projects", paths });
 		},
-		[stableProjects],
+		[stableProjects, panelSend],
 	);
 	const [dragProject, setDragProject] = useState<string | null>(null);
 	const [dropHint, setDropHint] = useState<{ path: string; after: boolean } | null>(null);

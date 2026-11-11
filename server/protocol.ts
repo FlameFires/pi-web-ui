@@ -1432,6 +1432,8 @@ export type ClientMessage =
 	| { type: "peek_elsewhere_question"; owner: string; id: string }
 	| { type: "navigate_question"; id: string }
 	| { type: "list_projects" }
+	/** 左栏拖拽后的项目排位：服务端存进全局设置，再广播给所有客户端（不同 origin 的窗口也要一致）。 */
+	| { type: "reorder_projects"; paths: string[] }
 	| { type: "list_files"; path?: string }
 	| { type: "read_file"; path: string }
 	| { type: "write_file"; path: string; text: string }

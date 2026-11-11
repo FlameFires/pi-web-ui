@@ -1140,6 +1140,15 @@ export class AgentService {
 		return pickLatestClientSnapshot(snaps);
 	}
 
+	/** 项目排位变化后给每个客户端各推一次列表：localStorage 不跨 origin，只能靠服务端广播。 */
+	async pushProjectsToAll(): Promise<void> {
+		for (const cs of this.clients.values()) {
+			try {
+				await cs.pushProjects();
+			} catch {}
+		}
+	}
+
 	async chatFromPlugin(pluginId: string, req: PluginChatRequest): Promise<PluginChatResult> {
 		const safe = String(pluginId ?? "plugin").replace(/[^A-Za-z0-9_-]/g, "") || "plugin";
 		const acct = String(req?.accountId ?? "default").replace(/[^A-Za-z0-9_-]/g, "") || "default";
