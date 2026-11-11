@@ -1682,6 +1682,15 @@ export class AgentService {
 		});
 	}
 
+	/** 项目排位变化后给每个客户端各推一次列表：localStorage 不跨 origin，只能靠服务端广播。 */
+	async pushProjectsToAll(): Promise<void> {
+		for (const cs of this.clients.values()) {
+			try {
+				await cs.pushProjects();
+			} catch {}
+		}
+	}
+
 	async attach(
 		clientId: string,
 		send: (msg: ServerMessage) => void,

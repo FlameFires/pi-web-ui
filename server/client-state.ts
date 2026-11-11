@@ -895,6 +895,8 @@ export interface ClientState {
 	defaultProviderKeys?: Record<string, string>;
 	markers?: MarkerSettings;
 	pinnedSessions?: Record<string, string[]>;
+	/** 手动模式下的左栏项目排位（归一化路径，按显示顺序）。放全局设置：跨窗口/跨 origin/跨设备一致。 */
+	projectOrder?: string[];
 	sessionTitles?: Record<string, Record<string, string>>;
 	locale?: string;
 	engine?: EngineId;
@@ -1868,6 +1870,33 @@ export class ClientStateStore {
 		const all = this.load();
 		const state = (all[ClientStateStore.GLOBAL_SETTINGS_KEY] ??= { projects: [] });
 		(state.defaultProviderKeys ??= {})[provider] = keyName;
+		this.save();
+	}
+
+	/** 手动模式的项目排位；空数组表示还没手动排过。 */
+	getProjectOrder(): string[] {
+		const order = this.load()[ClientStateStore.GLOBAL_SETTINGS_KEY]?.projectOrder;
+		return Array.isArray(order) ? order.filter((p) => typeof p === "string" && p.length > 0) : [];
+	}
+
+	/** 写手动排位：去空、归一、去重、截断。 */
+	setProjectOrder(paths: string[]): void {
+		const all = this.load();
+		const state = (all[ClientStateStore.GLOBAL_SETTINGS_KEY] ??= { projects: [] });
+		const seen = new Set<string>();
+		const next: string[] = [];
+		for (const path of paths) {
+			const raw = String(path ?? "").trim();
+			// 空串不能交给 normalizePathKey：resolve("") 会变成当前工作目录。
+			if (!raw) continue;
+			const key = normalizePathKey(raw);
+			if (!key || seen.has(key)) continue;
+			seen.add(key);
+			next.push(key);
+			if (next.length >= RECENT_PROJECTS_MAX) break;
+		}
+		if (next.length === 0) delete state.projectOrder;
+		else state.projectOrder = next;
 		this.save();
 	}
 

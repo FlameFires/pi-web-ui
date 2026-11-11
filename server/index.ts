@@ -1365,6 +1365,7 @@ export interface DispatchSession {
 	pushSessionsForCwd?(targetCwd: string): Promise<void>;
 	setSessionListLimit?(cwd: string, limit?: number): number;
 	pushProjects(): Promise<void>;
+	reorderProjects?(paths: string[]): Promise<void>;
 	removeProject(path: string): Promise<void>;
 	createSandbox?(opts: { name?: string; sourcePath?: string; ephemeral?: boolean }): Promise<void>;
 	resetSandbox?(path?: string): Promise<void>;
@@ -1627,6 +1628,8 @@ export interface EngineService {
 		send: (msg: ServerMessage) => void,
 		sendShared?: (msg: ServerMessage) => void,
 	): Promise<DispatchSession>;
+	/** 项目排位变了：给所有客户端各推一次 projects。 */
+	pushProjectsToAll?(): Promise<void>;
 	detach(clientId: string, send: (msg: ServerMessage) => void): void;
 	get(clientId: string): DispatchSession | undefined;
 	disposeAll(): Promise<void>;
@@ -1970,6 +1973,14 @@ const service: EngineService = {
 	 * 其他引擎的 `dismissConversation` 是本端语义（id, withFinished, force），不能当 daemon 路由用，
 	 * 直接退回请求方自己的会话。
 	 */
+	async pushProjectsToAll() {
+		// 门面必须显式转接：dispatch 里 `daemon?.pushProjectsToAll?.()` 对缺方法的对象会静默跳过，
+		// 表现成「拖动方自己重排了，别的窗口要刷新才同步」。
+		for (const engine of activeEngines()) {
+			if (engine instanceof AgentService) await engine.pushProjectsToAll();
+			else await engine.pushProjectsToAll?.();
+		}
+	},
 	async dismissConversation(clientId, msg) {
 		const engine = ensureEngine(resolveClientEngine(clientId));
 		if (engine instanceof AgentService) return engine.dismissConversation(clientId, msg);

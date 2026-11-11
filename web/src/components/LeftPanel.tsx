@@ -101,6 +101,7 @@ interface LeftPanelProps {
 			| { type: "new_chat"; cwd?: string }
 			| { type: "list_sessions"; path?: string; limit?: number }
 			| { type: "list_projects" }
+			| { type: "reorder_projects"; paths: string[] }
 			| { type: "switch_session"; path: string }
 			| { type: "switch_conversation"; id: string }
 			| { type: "set_cwd"; path: string }
@@ -438,6 +439,9 @@ function ConversationRowIndicator({ children, time }: { children: ReactNode; tim
 	return time ? <span className="conv-time">{time}</span> : null;
 }
 
+/** 乐观顺序里没列到的项目排到末尾。 */
+const MAX_PROJECT_RANK = Number.MAX_SAFE_INTEGER;
+
 export const LeftPanel = memo(function LeftPanel({
 	sessionFile,
 	conversations,
@@ -758,6 +762,14 @@ export const LeftPanel = memo(function LeftPanel({
 
 	const projectOrderManual = useProjectOrderManual();
 	const [projectOrderVersion, setProjectOrderVersion] = useState(0);
+	/**
+	 * 手动模式下拖动后的乐观顺序：等一次 `projects` 快照回来才对齐，避免拖完看到回跳。
+	 * 服务端已经把全局 `projectOrder` 应用在 `projects` 的线序里，所以快照一到就清掉。
+	 */
+	const [optimisticOrder, setOptimisticOrder] = useState<string[] | null>(null);
+	useEffect(() => {
+		setOptimisticOrder(null);
+	}, [deduplicatedProjects]);
 
 	/**
 	 * 项目排序两条路径：
@@ -773,16 +785,17 @@ export const LeftPanel = memo(function LeftPanel({
 		};
 		let ordered: ProjectSummary[];
 		if (projectOrderManual) {
-			const byKey = new Map(deduplicatedProjects.map((p) => [keyOf(p), p]));
-			const known: ProjectSummary[] = [];
-			for (const key of loadProjectOrder()) {
-				const project = byKey.get(key);
-				if (!project) continue;
-				known.push(project);
-				byKey.delete(key);
+			// 服务端已按全局 `projectOrder` 排好线序（跨 origin 的两个窗口同一份），
+			// 这里直接用；刚拖完还没收到快照时先用乐观顺序顶着。localStorage 只留作镜像。
+			if (optimisticOrder) {
+				const rank = new Map<string, number>();
+				optimisticOrder.forEach((key, i) => rank.set(key, i));
+				ordered = [...deduplicatedProjects].sort(
+					(a, b) => (rank.get(keyOf(a)) ?? MAX_PROJECT_RANK) - (rank.get(keyOf(b)) ?? MAX_PROJECT_RANK),
+				);
+			} else {
+				ordered = deduplicatedProjects;
 			}
-			// 新出现的项目置顶，其余保持用户排列
-			ordered = [...byKey.values(), ...known];
 		} else {
 			ordered = [...deduplicatedProjects].sort((a, b) => sortKey(b) - sortKey(a) || keyOf(a).localeCompare(keyOf(b)));
 		}
@@ -801,7 +814,11 @@ export const LeftPanel = memo(function LeftPanel({
 			const idx = keys.indexOf(to);
 			if (idx < 0) return;
 			keys.splice(after ? idx + 1 : idx, 0, from);
+			// 排位存服务端全局设置并广播：localhost 与 127.0.0.1 的 localStorage 不共享，
+			// 只有服务端这份能让两个窗口立刻一致。localStorage 继续留作镜像（离线/老服务端兜底）。
 			saveProjectOrder(keys);
+			panelSend({ type: "reorder_projects", paths: keys });
+			setOptimisticOrder(keys);
 			// 手动拖过就算要自己排：切到手动模式，别让下一次对话把顺序抢回去
 			if (!loadProjectOrderManual()) saveProjectOrderManual(true);
 			setProjectOrderVersion((v) => v + 1);

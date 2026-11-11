@@ -15030,6 +15030,33 @@ export class ClientSession {
 		this.flushSnapshot();
 	}
 
+	/**
+	 * 手动模式的排位（`__settings__.projectOrder`）优先：排位里的按排位先后，
+	 * 没排过的按最近使用时间挂末尾。自动模式的排序由前端按 `lastUsed` 自己排，
+	 * 服务端只保证「有线序」——所以这里永远按排位兜底。
+	 */
+	private applyProjectOrder(list: { path: string; lastUsed: number }[]): { path: string; lastUsed: number }[] {
+		const order = this.stateStore?.getProjectOrder?.() ?? [];
+		if (order.length === 0) return list;
+		const rank = new Map<string, number>();
+		order.forEach((p, i) => rank.set(normalizePathKey(p), i));
+		return [...list].sort((a, b) => {
+			const ra = rank.get(normalizePathKey(a.path));
+			const rb = rank.get(normalizePathKey(b.path));
+			if (ra !== undefined && rb !== undefined) return ra - rb;
+			if (ra !== undefined) return -1;
+			if (rb !== undefined) return 1;
+			return (b.lastUsed ?? 0) - (a.lastUsed ?? 0);
+		});
+	}
+
+	/** 手动模式拖拽后的排位：写全局设置，再推一次自己的列表（调用方负责广播给其他客户端）。 */
+	async reorderProjects(paths: string[]): Promise<void> {
+		if (!Array.isArray(paths) || paths.length === 0) return;
+		this.stateStore?.setProjectOrder?.(paths);
+		await this.pushProjects();
+	}
+
 	async pushProjects(): Promise<void> {
 		const now = Date.now();
 		try {
@@ -15040,7 +15067,7 @@ export class ClientSession {
 				void this.ensureProjectsCache(false).catch(() => {});
 			}
 			const recent = await this.stateStore.getRecentProjects(this.clientId);
-			this.emit({ type: "projects", projects: this.withCurrentCwd(recent, now) });
+			this.emit({ type: "projects", projects: this.withCurrentCwd(this.applyProjectOrder(recent), now) });
 		} catch {
 			this.emit({ type: "projects", projects: this.withCurrentCwd([], now) });
 		}
