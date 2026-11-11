@@ -14647,6 +14647,33 @@ export class ClientSession {
 		this.flushSnapshot();
 	}
 
+	/**
+	 * 按全局项目排位给列表排序：排位里的按排位先后，没排过的按最近使用时间挂在末尾。
+	 * 排位存在 `__settings__.projectOrder`（和 pinnedSessions 同级），所以两个窗口即使
+	 * 用的是 localhost / 127.0.0.1 这种不同 origin（localStorage 不共享）也能一致。
+	 */
+	private applyProjectOrder(list: { path: string; lastUsed: number }[]): { path: string; lastUsed: number }[] {
+		const order = this.stateStore?.getProjectOrder?.() ?? [];
+		if (order.length === 0) return list;
+		const rank = new Map<string, number>();
+		order.forEach((p, i) => rank.set(normalizePathKey(p), i));
+		return [...list].sort((a, b) => {
+			const ra = rank.get(normalizePathKey(a.path));
+			const rb = rank.get(normalizePathKey(b.path));
+			if (ra !== undefined && rb !== undefined) return ra - rb;
+			if (ra !== undefined) return -1;
+			if (rb !== undefined) return 1;
+			return (b.lastUsed ?? 0) - (a.lastUsed ?? 0);
+		});
+	}
+
+	/** 左栏拖拽后的项目排位：写全局设置，再推一次列表（调用方负责广播给其他客户端）。 */
+	async reorderProjects(paths: string[]): Promise<void> {
+		if (!Array.isArray(paths) || paths.length === 0) return;
+		this.stateStore?.setProjectOrder?.(paths);
+		await this.pushProjects();
+	}
+
 	async pushProjects(): Promise<void> {
 		const now = Date.now();
 		try {
@@ -14657,7 +14684,7 @@ export class ClientSession {
 				void this.ensureProjectsCache(false).catch(() => {});
 			}
 			const recent = await this.stateStore.getRecentProjects(this.clientId);
-			this.emit({ type: "projects", projects: this.withCurrentCwd(recent, now) });
+			this.emit({ type: "projects", projects: this.withCurrentCwd(this.applyProjectOrder(recent), now) });
 		} catch {
 			this.emit({ type: "projects", projects: this.withCurrentCwd([], now) });
 		}

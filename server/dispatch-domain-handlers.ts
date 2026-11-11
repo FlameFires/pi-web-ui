@@ -621,6 +621,8 @@ export function handleSessionLifecycleMessage(
 			clientId: string,
 			msg: { id: string; withFinishedSubagents?: boolean; force?: boolean; owner?: string },
 		) => Promise<boolean>;
+		/** 项目排位变了：给所有客户端各推一次 projects（不同 origin 的标签页也一致）。 */
+		pushProjectsToAll?: () => Promise<void>;
 	},
 	clientId?: string,
 ): boolean {
@@ -711,6 +713,15 @@ export function handleSessionLifecycleMessage(
 			return true;
 		case "list_projects":
 			void cs.pushProjects();
+			return true;
+		case "reorder_projects":
+			void (async () => {
+				try {
+					await cs.reorderProjects?.(msg.paths);
+					// 排位是全局的：其他窗口（含不同 origin 的标签页）也要立刻看到新顺序。
+					await daemon?.pushProjectsToAll?.();
+				} catch {}
+			})();
 			return true;
 		case "remove_project":
 			void cs.removeProject(msg.path);

@@ -1365,6 +1365,7 @@ export interface DispatchSession {
 	pushSessionsForCwd?(targetCwd: string): Promise<void>;
 	setSessionListLimit?(cwd: string, limit?: number): number;
 	pushProjects(): Promise<void>;
+	reorderProjects?(paths: string[]): Promise<void>;
 	removeProject(path: string): Promise<void>;
 	createSandbox?(opts: { name?: string; sourcePath?: string; ephemeral?: boolean }): Promise<void>;
 	resetSandbox?(path?: string): Promise<void>;
@@ -1626,6 +1627,8 @@ export interface EngineService {
 		send: (msg: ServerMessage) => void,
 		sendShared?: (msg: ServerMessage) => void,
 	): Promise<DispatchSession>;
+	/** 项目排位变了：给所有客户端各推一次 projects（跨 origin 的标签页也要即时同步）。 */
+	pushProjectsToAll?(): Promise<void>;
 	detach(clientId: string, send: (msg: ServerMessage) => void): void;
 	get(clientId: string): DispatchSession | undefined;
 	disposeAll(): Promise<void>;
@@ -1976,6 +1979,14 @@ const service: EngineService = {
 		if (!cs?.dismissConversation) return false;
 		await cs.dismissConversation(msg.id, msg.withFinishedSubagents, msg.force);
 		return true;
+	},
+	async pushProjectsToAll() {
+		// 排位是全局的：门面要转给真正持有客户端的那层，否则只有拖动方自己重排，
+		// 另一个窗口要等下次刷新才看到（曾经就是这么漏的）。
+		for (const engine of activeEngines()) {
+			if (engine instanceof AgentService) await engine.pushProjectsToAll();
+			else await engine.pushProjectsToAll?.();
+		}
 	},
 	peekElsewhereQuestion(targetId, ownerId, convId) {
 		const targetSvc = ensureEngine(resolveClientEngine(targetId));
