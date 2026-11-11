@@ -2081,6 +2081,8 @@
 		display: flex;
 		flex-direction: column;
 		margin-bottom: 2px;
+		/* 拖拽插入指示线是绝对定位的，需要节点当定位上下文 */
+		position: relative;
 	}
 	.lp-project-node + .lp-project-node {
 		margin-top: 6px;
@@ -2091,11 +2093,39 @@
 	.lp-project-node.dragging {
 		opacity: 0.45;
 	}
-	.lp-project-node.drop-before {
-		box-shadow: inset 0 2px 0 var(--accent);
+	/*
+	 * 插入指示线画在节点之间的空隙里，而不是节点内侧：
+	 * inset box-shadow 会压在 border-top 那条分割线上（drop-before），
+	 * 或停在内容底部、离分割线还隔着 padding（drop-after），两条线落点差一整个 padding，
+	 * 而且都会穿进 padding 遮住行文字。这里统一画在空隙中央，前后对称。
+	 */
+	.lp-project-node.drop-before::before,
+	.lp-project-node.drop-after::after {
+		content: "";
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 2px;
+		border-radius: 1px;
+		background: var(--accent);
+		pointer-events: none;
 	}
-	.lp-project-node.drop-after {
-		box-shadow: inset 0 -2px 0 var(--accent);
+	/*
+	 * 插入线只允许进到「两个项目节点之间」的那道缝里；列表首尾的节点外面可能是历史会话行
+	 * 或子会话行，越界就会像被拖到别人身上一样压在文字上。所以默认贴住节点自身边缘，
+	 * 只有确实紧挨着另一个项目节点时才越界到缝隙中央（缝隙 15px = 2+6+1+6，取 ±10px 居中）。
+	 */
+	.lp-project-node.drop-before::before {
+		top: 0;
+	}
+	.lp-project-node + .lp-project-node.drop-before::before {
+		top: -10px;
+	}
+	.lp-project-node.drop-after::after {
+		bottom: 0;
+	}
+	.lp-project-node.drop-after:has(+ .lp-project-node)::after {
+		bottom: -10px;
 	}
 	.lp-project-head-row[draggable="true"] {
 		cursor: default;
