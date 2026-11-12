@@ -52,7 +52,12 @@ node scripts/release-notes.mjs X.Y.Z --base v<上个版本>   # 预览（输出�
 # node scripts/release-notes.mjs X.Y.Z --base v<上个版本> --out /tmp/notes.md --create
 
 # 8) 发布 npm（会自动跑 prepublishOnly 构建）
-npm publish
+#    账号开了 2FA：用「绕过 2FA 的 granular token」直接 npm publish 会被 registry 降级成
+#    staged 发布（版本几分钟后才落库，期间重试只会 409 Cannot publish over previously
+#    staged version；unpublish / 改 dist-tag 更是直接 403）。走带 OTP 的封装：
+NPM_OTP=123456 npm run release:npm     # 预检脏工作区/账号/tag + 带 OTP 发布 + staged 自愈
+#    等价手工命令：npm publish --otp=123456
+#    只想看会打出什么：npm run release:npm -- --dry-run
 
 # 8.5) 桌面安装包（自动，三平台并行，无需手写）
 #    同一个 tag 也触发 .github/workflows/desktop-release.yml，三个 job 同时跑
@@ -76,6 +81,7 @@ npm publish
 npm run release:local -- vX.Y.Z                # 全量：桌面 + 手机（手机那步 qemu 构建 15–25 分钟）
 npm run release:local -- vX.Y.Z --skip-mobile  # 只打桌面
 npm run release:local -- vX.Y.Z --skip-desktop # 只打手机
+npm run release:local -- vX.Y.Z --skip-desktop --reuse-runtime  # 只打手机且不重建运行时（引擎没变时首选，几分钟）
 npm run release:local -- vX.Y.Z --no-upload    # 只打包，不碰 Release
 npm run release:local -- vX.Y.Z --portable     # 额外出便携版（内置 Git/Node，较慢）
 #    脚本会先校验 tag 与 package.json 版本一致，然后：npm run build → 桌面打包 → （可选）构建
