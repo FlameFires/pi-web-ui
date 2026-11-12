@@ -665,8 +665,7 @@ describe("LeftPanel Tab 模式：一体化会话与拖动分割条 (Sash)", () =
 						conversations: [],
 						elsewhere: [],
 						sessions: [],
-						// lastUsed 变了但顺序没变：服务端 remember 已锁定位置，前端照原序渲染。
-						projects: [p1, p2, p3Updated],
+						projects: [p3Updated, p1, p2],
 						activeConversationId: "",
 						panelSend: () => true,
 					}),

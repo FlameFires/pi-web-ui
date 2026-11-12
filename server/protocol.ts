@@ -1440,8 +1440,6 @@ export type ClientMessage =
 	| { type: "peek_elsewhere_question"; owner: string; id: string }
 	| { type: "navigate_question"; id: string }
 	| { type: "list_projects" }
-	/** 手动模式下拖拽后的项目排位：存进全局设置，再广播给所有客户端（跨 origin 也要一致）。 */
-	| { type: "reorder_projects"; paths: string[] }
 	| { type: "list_files"; path?: string }
 	| { type: "read_file"; path: string }
 	| { type: "write_file"; path: string; text: string }

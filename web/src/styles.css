@@ -2078,7 +2078,6 @@
 	}
 
 	.lp-project-node {
-		position: relative;
 		display: flex;
 		flex-direction: column;
 		margin-bottom: 2px;
@@ -2092,30 +2091,11 @@
 	.lp-project-node.dragging {
 		opacity: 0.45;
 	}
-	/* 插入指示线画在盒子外侧、对准兄弟项折叠后的 6px 间隙中线。
-	   不要改回 `box-shadow: inset`：那条线落在元素自己的边框内侧，而项目之间的
-	   margin-top/border-top/padding-top 都在盒子外面，首项与非首项基准还不一样，
-	   结果就是「拖到不同位置时线一会儿偏一会儿不偏」。 */
-	.lp-project-node.drop-before::before,
-	.lp-project-node.drop-after::after {
-		content: "";
-		position: absolute;
-		left: 0;
-		right: 0;
-		height: 2px;
-		background: var(--accent);
-		pointer-events: none;
+	.lp-project-node.drop-before {
+		box-shadow: inset 0 2px 0 var(--accent);
 	}
-	/* 指示线位置由 JS（setDropLineOffsets）算到整数像素边界，这里只负责放置 2px 线。 */
-	.lp-project-node {
-		--lp-drop-top: 0px;
-	}
-	.lp-project-node.drop-before::before,
-	.lp-project-node.drop-after::after {
-		top: var(--lp-drop-top);
-		/* 线要盖在相邻项目的标题行之上：标题行是定位元素且带背景（hover/选中/运行中），
-		   否则它会把线的上沿 1px 盖住，线就「一会儿细、一会儿正常」。 */
-		z-index: 2;
+	.lp-project-node.drop-after {
+		box-shadow: inset 0 -2px 0 var(--accent);
 	}
 	.lp-project-head-row[draggable="true"] {
 		cursor: default;

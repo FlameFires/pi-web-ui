@@ -10,14 +10,6 @@ import {
 	type ReactNode,
 } from "react";
 import { loadProjectClickSwitch } from "../project-click-settings";
-import {
-	loadProjectOrder,
-	loadProjectOrderManual,
-	projectFirstSeen,
-	saveProjectOrder,
-	saveProjectOrderManual,
-	useProjectOrderManual,
-} from "../project-order-settings";
 import { DeviceGroupSection } from "./DeviceGroupSection";
 import { NativeCliCreateEntry } from "./NativeCliCreateModal";
 import {
@@ -98,10 +90,9 @@ interface LeftPanelProps {
 	unreadConvKeys?: ReadonlySet<string>;
 	panelSend: (
 		msg:
-			| { type: "new_chat"; cwd?: string }
+			| { type: "new_chat" }
 			| { type: "list_sessions"; path?: string; limit?: number }
 			| { type: "list_projects" }
-			| { type: "reorder_projects"; paths: string[] }
 			| { type: "switch_session"; path: string }
 			| { type: "switch_conversation"; id: string }
 			| { type: "set_cwd"; path: string }
@@ -203,28 +194,12 @@ function formatModified(ts: number): string {
 	return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-/**
- * 项目收起时，钉住的历史行仍然保持展开：钉住就是让它常驻，
- * 否则一收起项目它就从左栏消失，和没钉一样。
- */
-export function isPinnedRowVisible(
-	isCollapsed: boolean,
-	block: { kind: "conversation" | "session"; target: { pinned?: boolean } },
-): boolean {
-	return isCollapsed && block.kind === "session" && Boolean(block.target.pinned);
-}
-
 type SessionMenuTarget = {
 	id: string;
 	kind: "running" | "history" | "section" | "elsewhere";
 	label: string;
 	owner?: string;
 	pseudo?: boolean;
-	/**
-	 * 该行自己的钉住状态。跨项目的历史行不在「当前项目的 sessions」里，
-	 * 菜单只能靠它判断该显示「钉住」还是「取消钉住」（否则永远显示「钉住」）。
-	 */
-	pinned?: boolean;
 };
 
 function isEditableTarget(el: EventTarget | null): boolean {
@@ -414,33 +389,10 @@ function groupSessionsByTime(
 	return groups;
 }
 
-/**
- * 完成证据角标：只标「没核对通过」的三种裁决，`pass` 不占位（免噪声）。
- * 详情（哪些文件/命令没对上）在完成通知与 get_result 里，这里只负责别让未验证看起来像已验证。
- */
-function subagentVerdictBadge(c: ConversationSummary, t: Translate) {
-	const verdict = c.subagentVerdict;
-	if (!verdict || verdict === "pass") return null;
-	const meta =
-		verdict === "blocked"
-			? { kind: "blocked", label: t("subagentVerdictBlocked") }
-			: verdict === "partial"
-				? { kind: "partial", label: t("subagentVerdictPartial") }
-				: { kind: "unverified", label: t("subagentVerdictUnverified") };
-	return (
-		<span className={`category-badge-pill evidence-${meta.kind}`} title={t("subagentVerdictHint")}>
-			{meta.label}
-		</span>
-	);
-}
-
 function ConversationRowIndicator({ children, time }: { children: ReactNode; time?: string }) {
 	if (children) return <span className="conv-indicator-slot">{children}</span>;
 	return time ? <span className="conv-time">{time}</span> : null;
 }
-
-/** 乐观顺序里没列到的项目排到末尾。 */
-const MAX_PROJECT_RANK = Number.MAX_SAFE_INTEGER;
 
 export const LeftPanel = memo(function LeftPanel({
 	sessionFile,
@@ -726,6 +678,7 @@ export const LeftPanel = memo(function LeftPanel({
 	});
 
 	const deduplicatedProjects = useMemo(() => {
+		const discoveredAt = Date.now();
 		const seen = new Set<string>();
 		const list: ProjectSummary[] = [];
 		for (const p of projects) {
@@ -738,7 +691,7 @@ export const LeftPanel = memo(function LeftPanel({
 			const normCur = normalizeSessionPathKey(currentCwd);
 			if (!seen.has(normCur)) {
 				seen.add(normCur);
-				list.push({ path: currentCwd, lastUsed: 0 });
+				list.push({ path: currentCwd, lastUsed: discoveredAt });
 			}
 		}
 		for (const group of groupConversations(conversations, currentCwd, activeConversationId)) {
@@ -746,7 +699,7 @@ export const LeftPanel = memo(function LeftPanel({
 			const normC = normalizeSessionPathKey(group.cwd);
 			if (!seen.has(normC)) {
 				seen.add(normC);
-				list.push({ path: group.cwd, lastUsed: 0 });
+				list.push({ path: group.cwd, lastUsed: discoveredAt });
 			}
 		}
 		for (const e of elsewhere) {
@@ -754,56 +707,28 @@ export const LeftPanel = memo(function LeftPanel({
 			const normC = normalizeSessionPathKey(e.cwd);
 			if (!seen.has(normC)) {
 				seen.add(normC);
-				list.push({ path: e.cwd, lastUsed: 0 });
+				list.push({ path: e.cwd, lastUsed: discoveredAt });
 			}
 		}
 		return list;
 	}, [projects, currentCwd, conversations, elsewhere, activeConversationId]);
 
-	const projectOrderManual = useProjectOrderManual();
+	const projectRankMapRef = useRef<Map<string, number>>(new Map());
 	const [projectOrderVersion, setProjectOrderVersion] = useState(0);
-	/**
-	 * 手动模式下拖动后的乐观顺序：等一次 `projects` 快照回来才对齐，避免拖完看到回跳。
-	 * 服务端已经把全局 `projectOrder` 应用在 `projects` 的线序里，所以快照一到就清掉。
-	 */
-	const [optimisticOrder, setOptimisticOrder] = useState<string[] | null>(null);
-	useEffect(() => {
-		setOptimisticOrder(null);
-	}, [deduplicatedProjects]);
 
-	/**
-	 * 项目排序两条路径：
-	 * - 手动模式：只认持久化的拖拽/添加顺序，新出现的项目置顶。
-	 * - 自动模式：按最近真实对话时间（`lastUsed`）降序；从没对话过的项目用「本浏览器首次出现时间」，
-	 *   所以新添加的项目同样在最上方，而查看/切换项目不会改变它们的时间（服务端不再在切项目时刷 lastUsed）。
-	 */
 	const stableProjects = useMemo(() => {
-		const keyOf = (p: ProjectSummary) => normalizeSessionPathKey(p.path);
-		const firstSeen = projectFirstSeen(deduplicatedProjects.map(keyOf));
-		const sortKey = (p: ProjectSummary) => {
-			return p.lastUsed > 0 ? p.lastUsed : (firstSeen.get(keyOf(p)) ?? 0);
-		};
-		let ordered: ProjectSummary[];
-		if (projectOrderManual) {
-			// 服务端已按全局 `projectOrder` 排好线序（跨 origin 的两个窗口同一份），
-			// 这里直接用；刚拖完还没收到快照时先用乐观顺序顶着。localStorage 只留作镜像。
-			if (optimisticOrder) {
-				const rank = new Map<string, number>();
-				optimisticOrder.forEach((key, i) => rank.set(key, i));
-				ordered = [...deduplicatedProjects].sort(
-					(a, b) => (rank.get(keyOf(a)) ?? MAX_PROJECT_RANK) - (rank.get(keyOf(b)) ?? MAX_PROJECT_RANK),
-				);
-			} else {
-				ordered = deduplicatedProjects;
-			}
-		} else {
-			ordered = [...deduplicatedProjects].sort((a, b) => sortKey(b) - sortKey(a) || keyOf(a).localeCompare(keyOf(b)));
-		}
-		// 镜像当前顺序：切到手动模式时沿用眼前看到的排列，不会突然重排
-		saveProjectOrder(ordered.map(keyOf));
-		return ordered;
+		const rankMap = projectRankMapRef.current;
+		let maxRank = 0;
+		for (const r of rankMap.values()) if (r > maxRank) maxRank = r;
+		const newcomers = deduplicatedProjects.filter((p) => !rankMap.has(normalizeSessionPathKey(p.path)));
+		newcomers.sort((a, b) => (b.lastUsed ?? 0) - (a.lastUsed ?? 0));
+		for (const p of newcomers) rankMap.set(normalizeSessionPathKey(p.path), ++maxRank);
+		return [...deduplicatedProjects].sort(
+			(a, b) =>
+				(rankMap.get(normalizeSessionPathKey(a.path)) ?? 0) - (rankMap.get(normalizeSessionPathKey(b.path)) ?? 0),
+		);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [deduplicatedProjects, projectOrderManual, projectOrderVersion]);
+	}, [deduplicatedProjects, projectOrderVersion]);
 
 	const moveProject = useCallback(
 		(fromPath: string, toPath: string, after: boolean) => {
@@ -814,70 +739,36 @@ export const LeftPanel = memo(function LeftPanel({
 			const idx = keys.indexOf(to);
 			if (idx < 0) return;
 			keys.splice(after ? idx + 1 : idx, 0, from);
-			// 排位存服务端全局设置并广播：localhost 与 127.0.0.1 的 localStorage 不共享，
-			// 只有服务端这份能让两个窗口立刻一致。localStorage 继续留作镜像（离线/老服务端兜底）。
-			saveProjectOrder(keys);
-			panelSend({ type: "reorder_projects", paths: keys });
-			setOptimisticOrder(keys);
-			// 手动拖过就算要自己排：切到手动模式，别让下一次对话把顺序抢回去
-			if (!loadProjectOrderManual()) saveProjectOrderManual(true);
+			const rankMap = projectRankMapRef.current;
+			let r = 0;
+			for (const k of keys) rankMap.set(k, ++r);
+			for (const [k, v] of rankMap) if (!keys.includes(k)) rankMap.set(k, r + v);
 			setProjectOrderVersion((v) => v + 1);
 		},
 		[stableProjects],
 	);
 	const [dragProject, setDragProject] = useState<string | null>(null);
-	/**
-	 * 拖拽项目时「插入点在目标上方还是下方」的分界线（y 坐标）。
-	 * 用项目标题行的中线，而不是整个节点：节点里可能展开着几十行会话，
-	 * 拿整节点算会让阈值远离标题，指示线看起来忽上忽下。
-	 */
-	function projectDropSplitY(node: HTMLElement, clientY: number): number {
-		const head = node.querySelector<HTMLElement>(".lp-project-head-row");
-		const rect = (head ?? node).getBoundingClientRect();
-		// 光标落在标题行之外（比如展开的会话区）时，按它在标题行的上方/下方定夺，
-		// 避免一直判成 after。
-		if (clientY < rect.top) return rect.top;
-		if (clientY > rect.bottom) return rect.top;
-		return rect.top + rect.height / 2;
-	}
-
-	/**
-	 * 指示线对准「分割线」，并保证在整数像素边界上绘制。
-	 * 分割线（1px）位于 edge 处：下方线取下一项的 top（无下一项则本项底边），
-	 * 上方线取本项的 top。2px 线覆盖 [edge-1, edge+1)，即分割线加上它上方 1px。
-	 * 线中心若落在半像素上会被抗锯齿成 3 行淡色像素，看起来变细，所以 edge 先取整。
-	 */
-	function setDropLineOffsets(node: HTMLElement, after: boolean): void {
-		const r = node.getBoundingClientRect();
-		const padTop = r.top + node.clientTop;
-		let edge = r.top;
-		if (after) {
-			const next = node.nextElementSibling as HTMLElement | null;
-			edge = next ? next.getBoundingClientRect().top : r.bottom;
-		}
-		node.style.setProperty("--lp-drop-top", `${Math.round(edge) - 1 - padTop}px`);
-	}
-
 	const [dropHint, setDropHint] = useState<{ path: string; after: boolean } | null>(null);
 
 	const effectiveProjects = stableProjects;
 
-	// 本地有没有「上次的展开/收起记录」：有就按记录恢复（刷新不该自己弹开），
-	// 没有就是首次使用（当前项目要展开）。这个判断必须在挂载时定下来 ——
-	// `cwd` 来自 websocket 快照，挂载那一刻通常还没到，不能拿它当判据。
-	const persistedExpandedRef = useRef<Set<string> | null>(null);
 	const [expandedProjects, setExpandedProjects] = useState<Set<string>>(() => {
 		try {
 			const raw = localStorage.getItem("pi-web-ui:lp-expanded-projects");
 			if (raw) {
 				const arr = JSON.parse(raw);
 				if (Array.isArray(arr)) {
-					persistedExpandedRef.current = new Set<string>(arr);
-					return persistedExpandedRef.current;
+					const s = new Set<string>(arr);
+					const norm = normalizeSessionPathKey(currentCwd);
+					if (norm) s.add(norm);
+					return s;
 				}
 			}
 		} catch {}
-		return new Set<string>();
+		const s = new Set<string>();
+		const norm = normalizeSessionPathKey(currentCwd);
+		if (norm) s.add(norm);
+		return s;
 	});
 
 	useEffect(() => {
@@ -918,16 +809,9 @@ export const LeftPanel = memo(function LeftPanel({
 		});
 	}, [projectSessions]);
 
-	const expandedSeededRef = useRef(false);
 	useEffect(() => {
 		const normCur = normalizeSessionPathKey(currentCwd);
 		if (normCur) {
-			// 首个拿到的 cwd：刷新场景保留用户收起的状态（有记录就不动），
-			// 首次使用（没有记录）要展开当前项目；之后再切项目一律自动展开。
-			if (!expandedSeededRef.current) {
-				expandedSeededRef.current = true;
-				if (persistedExpandedRef.current) return;
-			}
 			setExpandedProjects((prev) => {
 				if (prev.has(normCur)) return prev;
 				const next = new Set(prev);
@@ -1132,7 +1016,7 @@ export const LeftPanel = memo(function LeftPanel({
 						: { ...entry, hidden: true };
 				if (entry.id === "host:conv-pin") {
 					if (target.kind === "history") {
-						const isPinned = target.pinned ?? sessions.find((s) => s.path === target.id)?.pinned;
+						const isPinned = sessions.find((s) => s.path === target.id)?.pinned;
 						return isPinned ? { ...entry, label: t("unpinConversation") } : entry;
 					}
 					if (!scopeId) return { ...entry, hidden: true };
@@ -1239,9 +1123,8 @@ export const LeftPanel = memo(function LeftPanel({
 			}
 			if (entry.id === "host:conv-pin") {
 				if (target.kind === "history") {
-					// 这里的 target 是右键系统的精简对象（没有 pinned），完整目标在 sessionMenuRef 里。
-					const pinned = sessionMenuRef.current?.target.pinned ?? sessions.find((s) => s.path === target.id)?.pinned;
-					panelSend({ type: "pin_session", path: target.id, pinned: !pinned });
+					const cur = sessions.find((s) => s.path === target.id);
+					panelSend({ type: "pin_session", path: target.id, pinned: !cur?.pinned });
 					return;
 				}
 				if (scopeId) {
@@ -2079,7 +1962,7 @@ export const LeftPanel = memo(function LeftPanel({
 				key={s.path}
 				data-session-key={sessionKey}
 				onMouseLeave={() => setConfirmDel((k) => (k === `sess:${s.path}` ? null : k))}
-				onContextMenu={(e) => openSessionMenu(e, { id: s.path, kind: "history", label: rawTitle, pinned: s.pinned })}
+				onContextMenu={(e) => openSessionMenu(e, { id: s.path, kind: "history", label: rawTitle })}
 			>
 				<RowMain
 					editing={renaming === s.path}
@@ -2412,8 +2295,6 @@ export const LeftPanel = memo(function LeftPanel({
 								</span>
 							)}
 
-							{subagentVerdictBadge(c, t)}
-
 							<ConversationRowIndicator time={convTime ? formatModified(convTime) : undefined}>
 								{c.hasQuestion ? (
 									<span
@@ -2610,8 +2491,6 @@ export const LeftPanel = memo(function LeftPanel({
 							</span>
 						)}
 
-						{subagentVerdictBadge(c, t)}
-
 						<ConversationRowIndicator time={convTime ? formatModified(convTime) : undefined}>
 							{hasQuestion || c.hasQuestion || isCliWaiting ? (
 								<span
@@ -2756,7 +2635,8 @@ export const LeftPanel = memo(function LeftPanel({
 							onContextMenu={(e) => openProjectMenu(e, { path: g.cwd, lastUsed: 0 })}
 							onDoubleClick={(e) => {
 								e.stopPropagation();
-								panelSend({ type: "new_chat", cwd: g.cwd });
+								panelSend({ type: "set_cwd", path: g.cwd });
+								panelSend({ type: "new_chat" });
 								focusComposer();
 							}}
 						>
@@ -2998,11 +2878,7 @@ export const LeftPanel = memo(function LeftPanel({
 										transition?.kind === "cwd" ? normalizeSessionPathKey(transition.target) : null;
 									const q = filterText.trim().toLowerCase();
 									const views = projectTreeModel.map((m) => {
-										// 钉住的行不受 maxVisible 截断：它常驻，翻页也不能把它藏起来。
-										const visibleIdle = new Set([
-											...m.idleSessions.slice(0, m.maxVisible),
-											...m.idleSessions.filter((s) => s.pinned),
-										]);
+										const visibleIdle = new Set(m.idleSessions.slice(0, m.maxVisible));
 										const visibleModel = {
 											...m,
 											orderedBlocks: m.orderedBlocks.filter(
@@ -3067,15 +2943,11 @@ export const LeftPanel = memo(function LeftPanel({
 										if (!isCollapsed) {
 											everExpandedRef.current.add(pNorm);
 										}
-										const hasPinnedHistory = idleSessions.some((s) => s.pinned);
 										const shouldMountChildren =
 											!isCollapsed ||
 											pRunningRows.length > 0 ||
 											hasUnread ||
 											active ||
-											// 刷新后一直是收起状态、也没展开过的项目：只要里面有钉住的行，
-											// 子节点就得挂上，否则那行永远不出现（要手动展开再收才看得到）。
-											hasPinnedHistory ||
 											everExpandedRef.current.has(pNorm);
 
 										const dropClass =
@@ -3095,19 +2967,16 @@ export const LeftPanel = memo(function LeftPanel({
 													if (!dragProject || dragProject === p.path) return;
 													e.preventDefault();
 													e.dataTransfer.dropEffect = "move";
-													// 项目节点含展开的会话行，高度可能几百 px：拿整节点算阈值（还封顶 32px）
-													// 会让光标刚进项目中部就判成 after，指示线一下跳到项目底部，
-													// 看起来就是「往上一点偏上、往下一点偏下」。按标题行判定才跟手。
-													const after = e.clientY > projectDropSplitY(e.currentTarget, e.clientY);
-													const node = e.currentTarget as HTMLElement;
-													setDropLineOffsets(node, after);
+													const r = e.currentTarget.getBoundingClientRect();
+													const after = e.clientY > r.top + Math.min(r.height, 32) / 2;
 													if (dropHint?.path !== p.path || dropHint.after !== after)
 														setDropHint({ path: p.path, after });
 												}}
 												onDrop={(e) => {
 													if (!dragProject) return;
 													e.preventDefault();
-													moveProject(dragProject, p.path, e.clientY > projectDropSplitY(e.currentTarget, e.clientY));
+													const r = e.currentTarget.getBoundingClientRect();
+													moveProject(dragProject, p.path, e.clientY > r.top + Math.min(r.height, 32) / 2);
 													setDragProject(null);
 													setDropHint(null);
 												}}
@@ -3159,9 +3028,12 @@ export const LeftPanel = memo(function LeftPanel({
 														onDoubleClick={(e) => {
 															e.stopPropagation();
 															if (switching) return;
-															// 目标项目直接写在 new_chat 上：服务端先切工作区、核验后再建会话（#872），
-															// 不再发「set_cwd + new_chat」两条各自竞速的消息。
-															panelSend({ type: "new_chat", cwd: p.path });
+															if (active) {
+																panelSend({ type: "new_chat" });
+															} else {
+																panelSend({ type: "set_cwd", path: p.path });
+																panelSend({ type: "new_chat" });
+															}
 															focusComposer();
 														}}
 													>
@@ -3208,11 +3080,7 @@ export const LeftPanel = memo(function LeftPanel({
 																</span>
 															)}
 															<span className={`project-time ${switching ? "switching-pct" : ""}`}>
-																{switching
-																	? `${transition?.progress ?? 0}%`
-																	: p.lastUsed > 0
-																		? formatModified(p.lastUsed)
-																		: ""}
+																{switching ? `${transition?.progress ?? 0}%` : formatModified(p.lastUsed)}
 															</span>
 														</span>
 													</button>
@@ -3225,7 +3093,8 @@ export const LeftPanel = memo(function LeftPanel({
 																title={t("newChat") || "新建对话"}
 																onClick={(e) => {
 																	e.stopPropagation();
-																	panelSend({ type: "new_chat", cwd: p.path });
+																	if (!active) panelSend({ type: "set_cwd", path: p.path });
+																	panelSend({ type: "new_chat" });
 																	focusComposer();
 																}}
 															>
@@ -3276,26 +3145,19 @@ export const LeftPanel = memo(function LeftPanel({
 														className={`lp-project-tree-children${isCollapsed ? " is-collapsed" : " is-expanded"}${pRunningRows.length > 0 ? " has-running-rows" : ""}`}
 													>
 														{}
-														{orderedBlocks.map((block) => {
-															// 钉住的历史行在项目收起时仍然显示 —— 钉住就是让它常驻，
-															// 否则一收起项目它就从左栏消失了，跟没钉一样。
-															const pinnedVisible = isPinnedRowVisible(isCollapsed, block);
-															return (
-																<Fragment key={block.key}>
-																	{block.kind === "conversation" ? (
-																		block.rows.map((row) => renderSingleConvRow(row, p.path))
-																	) : (
-																		<div
-																			className={`lp-history-collapsible${isCollapsed && !pinnedVisible ? " collapsed" : " expanded"}${pinnedVisible ? " is-pinned-visible" : ""}`}
-																		>
-																			<div className="lp-history-collapsible-inner">
-																				{renderHistorySessionRow(block.target, p.path)}
-																			</div>
+														{orderedBlocks.map((block) => (
+															<Fragment key={block.key}>
+																{block.kind === "conversation" ? (
+																	block.rows.map((row) => renderSingleConvRow(row, p.path))
+																) : (
+																	<div className={`lp-history-collapsible${isCollapsed ? " collapsed" : " expanded"}`}>
+																		<div className="lp-history-collapsible-inner">
+																			{renderHistorySessionRow(block.target, p.path)}
 																		</div>
-																	)}
-																</Fragment>
-															);
-														})}
+																	</div>
+																)}
+															</Fragment>
+														))}
 
 														{}
 														<div className={`lp-history-collapsible${isCollapsed ? " collapsed" : " expanded"}`}>
