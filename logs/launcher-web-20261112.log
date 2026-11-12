@@ -1,0 +1,1576 @@
+[plugin:usage-ledger] 回填：+0 新记录，7 条合并
+[plugin:usage-ledger] 回填：+0 新记录，11 条合并
+[plugin:usage-ledger] 回填：+1 新记录，8 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+(node:8468) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGINT listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8468) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+(node:8468) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，13 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+
+===== 2026-11-12 00:23:31 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\tmp\\pitest","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：20 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，23 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，25 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，23 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+(node:49480) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGINT listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49480) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+[plugin:usage-ledger] 回填：+0 新记录，7 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+(node:49480) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+[plugin:usage-ledger] 回填：+0 新记录，41 条合并
+[plugin:usage-ledger] 回填：+0 新记录，7 条合并
+[plugin:usage-ledger] 回填：+0 新记录，26 条合并
+
+===== 2026-11-12 00:54:37 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，4 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+1 新记录，15 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，28 条合并
+[plugin:usage-ledger] 回填：+0 新记录，21 条合并
+
+===== 2026-11-12 01:11:23 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，7 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，18 条合并
+
+===== 2026-11-12 01:16:42 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\Mkmo\\mkmo_activities\\微店\\261113 微店\\18.00 【12.5南京】月半子一日店长","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，1 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，6 条合并
+[plugin:usage-ledger] 回填：+0 新记录，8 条合并
+[plugin:usage-ledger] 回填：+0 新记录，24 条合并
+[plugin:usage-ledger] 回填：+1 新记录，48 条合并
+[plugin:usage-ledger] 回填：+0 新记录，29 条合并
+[plugin:usage-ledger] 回填：+1 新记录，38 条合并
+[plugin:usage-ledger] 回填：+0 新记录，7 条合并
+[plugin:usage-ledger] 回填：+0 新记录，18 条合并
+[plugin:usage-ledger] 回填：+0 新记录，46 条合并
+[plugin:usage-ledger] 回填：+0 新记录，37 条合并
+
+===== 2026-11-12 02:06:48 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，11 条合并
+
+===== 2026-11-12 02:13:24 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，2 条合并
+
+===== 2026-11-12 02:17:47 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，18 条合并
+
+===== 2026-11-12 02:21:45 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，6 条合并
+
+===== 2026-11-12 02:23:42 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，5 条合并
+
+===== 2026-11-12 02:26:20 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，5 条合并
+[plugin:usage-ledger] 回填：+0 新记录，3 条合并
+
+===== 2026-11-12 02:31:30 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+
+===== 2026-11-12 02:36:31 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，4 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，5 条合并
+
+===== 2026-11-12 02:41:52 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，1 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+
+===== 2026-11-12 02:44:41 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，3 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+
+===== 2026-11-12 02:46:17 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，2 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，3 条合并
+[plugin:usage-ledger] 回填：+1 新记录，13 条合并
+[plugin:usage-ledger] 回填：+0 新记录，19 条合并
+[plugin:usage-ledger] 回填：+0 新记录，21 条合并
+
+===== 2026-11-12 03:12:19 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：22 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，3 条合并
+[plugin:usage-ledger] 回填：+0 新记录，3 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+
+===== 2026-11-12 03:24:46 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+
+===== 2026-11-12 03:26:04 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\tmp\\pitest","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，1 条合并
+
+===== 2026-11-12 03:28:49 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+
+===== 2026-11-12 03:32:35 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，18 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+0 新记录，4 条合并
+[plugin:usage-ledger] 回填：+0 新记录，1 条合并
+
+===== 2026-11-12 11:19:05 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\Agent\\pi-web-ui\\repo","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+
+===== 2026-11-12 11:23:50 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\Agent\\pi-web-ui\\Global","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+12 新记录，0 条合并
+[plugin:usage-ledger] 回填：+25 新记录，1 条合并
+[plugin:usage-ledger] 回填：+10 新记录，0 条合并
+[plugin:usage-ledger] 回填：+18 新记录，0 条合并
+[plugin:usage-ledger] 回填：+17 新记录，0 条合并
+
+===== 2026-11-12 11:49:15 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+2 新记录，0 条合并
+[plugin:usage-ledger] 回填：+18 新记录，14 条合并
+
+===== 2026-11-12 11:55:40 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+
+===== 2026-11-12 11:55:41 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，2 条合并
+MCP: Failed to connect to jadx-mcp: Connection closed (The system cannot find the path specified.)
+MCP: Failed to connect to ida-pro-mcp: Failed to complete request to IDA Pro. Did you run Edit -> Plugins -> MCP (Ctrl+Alt+M) to start the server? The request was not retried automatically. If this was a mutating operation, verify IDA state before retrying. Traceback (most recent call last): File "C:\Users\vi\.agents\mcp\venv\Lib\site-packages\ida_pro_mcp\server.py", line 140, in dispatch_proxy return _proxy_to_ida(request) ^^^^^^^^^^^^^^^^^^^^^^ File "C:\Users\vi\.agents\mcp\venv\Lib\site-packages\ida_pro_mcp\server.py", line 99, in _proxy_to_ida conn.request( File "D:\Programs\Scoop\apps\python312\current\Lib\http\client.py", line 1338, in request self._send_request(method, url, body, headers, encode_chunked) File "D:\Programs\Scoop\apps\python312\current\Lib\http\client.py", line 1384, in _send_request self.endheaders(body, encode_chunked=encode_chunked) File "D:\Programs\Scoop\apps\python312\current\Lib\http\client.py", line 1333, in endheaders self._send_output(message_body, encode_chunked=encode_chunked) File "D:\Programs\Scoop\apps\python312\current\Lib\http\client.py", line 1093, in _send_output self.send(msg) File "D:\Programs\Scoop\apps\python312\current\Lib\http\client.py", line 1037, in send self.connect() File "D:\Programs\Scoop\apps\python312\current\Lib\http\client.py", line 1003, in connect self.sock = self._create_connection( ^^^^^^^^^^^^^^^^^^^^^^^^ File "D:\Programs\Scoop\apps\python312\current\Lib\socket.py", line 865, in create_connection raise exceptions[0] File "D:\Programs\Scoop\apps\python312\current\Lib\socket.py", line 850, in create_connection sock.connect(sa) ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it ([MCP] No IDA instances discovered, using default 127.0.0.1:13337)
+[plugin:usage-ledger] 回填：+1 新记录，15 条合并
+
+===== 2026-11-12 12:01:31 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:usage-ledger] 回填：+12 新记录，4 条合并
+
+===== 2026-11-12 12:08:33 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，5 条合并
+
+===== 2026-11-12 12:09:56 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，3 条合并
+[plugin:usage-ledger] 回填：+0 新记录，12 条合并
+
+===== 2026-11-12 12:18:40 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，7 条合并
+[plugin:usage-ledger] 回填：+0 新记录，5 条合并
+
+===== 2026-11-12 12:24:31 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，3 条合并
+[plugin:usage-ledger] 回填：+0 新记录，14 条合并
+
+===== 2026-11-12 12:29:50 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，1 条合并
+[mcp] [mcp:rea] starting: D:\Programs\Scoop\persist\nvm\nodejs\nodejs\node.exe D:\Programs\Scoop\persist\nvm\nodejs\nodejs\node_modules\rea-agents\scripts\rea.mjs mcp
+[mcp] [mcp:rea] 单行超过 1MB 上限，按协议错误关闭
+[mcp] [mcp] 服务器「rea」启动失败： [mcp:rea] 单行超过 1MB 上限，按协议错误关闭
+[mcp] [mcp] 配置已热加载：0 个服务器 / 0 个工具（沿用 0、启动 0、关闭 0、失败 1）
+[plugin:usage-ledger] 回填：+0 新记录，31 条合并
+[mcp] [mcp:rea] starting: D:\Programs\Scoop\persist\nvm\nodejs\nodejs\node.exe D:\Programs\Scoop\persist\nvm\nodejs\nodejs\node_modules\rea-agents\scripts\rea.mjs mcp
+[mcp] [mcp:rea] 单行超过 1MB 上限，按协议错误关闭
+[mcp] [mcp] 服务器「rea」启动失败： [mcp:rea] 单行超过 1MB 上限，按协议错误关闭
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[mcp] [mcp:rea] starting: D:\Programs\Scoop\persist\nvm\nodejs\nodejs\node.exe C:\Users\vi\.pi\agent\rea-mcp-proxy.mjs
+[mcp] [mcp:rea] ready, 229 tools
+[mcp] [mcp] 配置已热加载：1 个服务器 / 229 个工具（沿用 0、启动 1、关闭 0、失败 0）
+[plugin:usage-ledger] 回填：+0 新记录，40 条合并
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[plugin:usage-ledger] 回填：+1 新记录，29 条合并
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[plugin:usage-ledger] 回填：+1 新记录，37 条合并
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[plugin:usage-ledger] 回填：+39 新记录，17 条合并
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[mcp] [mcp:rea] starting: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node.exe E:\GitRepos\rea\patches\rea-mcp-proxy.mjs
+[mcp] [mcp:rea] ready, 229 tools
+[mcp] [mcp] 配置已热加载：1 个服务器 / 229 个工具（沿用 0、启动 1、关闭 1、失败 0）
+[mcp] [mcp:rea] stderr: {"level":40,"time":1794459562535,"application":"rea","mode":"mcp","layer":"server","tool":"inspect_adb_client","durationMs":4.5,"status":"error","msg":"MCP tool execution completed"}
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+[plugin:usage-ledger] 回填：+0 新记录，21 条合并
+[skills] catalog digest b3e6c8c37e62e92b→4e7406ab8175a9ee (12 skills)
+[skills] catalog digest 4e7406ab8175a9ee→b3e6c8c37e62e92b (14 skills)
+
+===== 2026-11-12 13:02:45 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp:rea] starting: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node.exe E:\GitRepos\rea\patches\rea-mcp-proxy.mjs
+[mcp] [mcp:rea] ready, 229 tools
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，4 条合并
+[mcp] [mcp:rea] stderr: {"level":40,"time":1794459790503,"application":"rea","mode":"mcp","layer":"server","tool":"list_frida_devices","durationMs":8.53,"status":"error","msg":"MCP tool execution completed"}
+[mcp] [mcp:rea] stderr: {"level":40,"time":1794459794402,"application":"rea","mode":"mcp","layer":"server","tool":"inspect_pcap_client","durationMs":5.47,"status":"error","msg":"MCP tool execution completed"}
+[plugin:usage-ledger] 回填：+0 新记录，19 条合并
+
+===== 2026-11-12 13:12:33 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp:rea] starting: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node.exe E:\GitRepos\rea\patches\rea-mcp-proxy.mjs
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[mcp] [mcp:rea] ready, 229 tools
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"C:\\Users\\vi\\Desktop","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:usage-ledger] 回填：+0 新记录，10 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp:rea] starting: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node.exe E:\GitRepos\rea\patches\rea-mcp-proxy.mjs
+[mcp] [mcp:rea] ready, 229 tools
+[plugin:usage-ledger] 回填：+0 新记录，1 条合并
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\Agent\\pi-web-ui\\repo","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\Agent\\pi-web-ui\\repo","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:github-workbench] activated (v0.1.4)
+[plugin:hongguo] activated (v0.1.5)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\Agent\\pi-web-ui\\repo","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:hongguo] activated (v0.1.5)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\Agent\\pi-web-ui\\repo","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[plugin:hongguo] [hongguo] request /cover failed (UPSTREAM)
+[plugin:hongguo] [hongguo] request /cover failed (UPSTREAM)
+[plugin:hongguo] [hongguo] request /cover failed (UPSTREAM)
+[plugin:hongguo] [hongguo] request /play failed (ANONYMOUS_LIMITED)
+[plugin:hongguo] [hongguo] request /play failed (ANONYMOUS_LIMITED)
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\Agent\\pi-web-ui\\repo","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[mcp] [mcp:rea] starting: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node.exe E:\GitRepos\rea\patches\rea-mcp-proxy.mjs
+[mcp] [mcp:rea] ready, 229 tools
+[plugin:usage-ledger] 回填：+0 新记录，4 条合并
+[mcp] [mcp:rea] 进程退出 (0)，下次调用将自动重启
+[mcp] [mcp:rea] 进程退出 (0)，下次调用将自动重启
+[mcp] [mcp] 配置已热加载：0 个服务器 / 0 个工具（沿用 0、启动 0、关闭 1、失败 0）
+[mcp] [mcp] 配置已热加载：0 个服务器 / 0 个工具（沿用 0、启动 0、关闭 1、失败 0）
+[plugin:usage-ledger] 回填：+0 新记录，34 条合并
+[plugin:usage-ledger] 回填：+0 新记录，2 条合并
+[plugin:usage-ledger] 回填：+1 新记录，5 条合并
+[plugin:usage-ledger] 回填：+1 新记录，1 条合并
+
+===== 2026-11-12 15:03:07 运行 npm start（生产模式）=====
+npm notice run pi-web-ui@0.119.0 start
+npm notice run node --import ./dist/server/resolve-global-sdk.js dist/server/index.js
+[pi-web-ui] following a newer pi SDK on this machine: D:\Programs\Scoop\persist\nvm\nodejs\v24.22.2\node_modules\@earendil-works\pi-coding-agent\package.json (v1.5.2; set PI_WEB_SDK=bundled to pin the bundled copy)
+  control    : \\.\pipe\pi-web-ui-8787
+
+  ⚡ pi-web-ui — web chat for the pi coding agent
+    http://localhost:8787
+    workspace   : E:\Agent\pi-web-ui\repo
+    session dir : C:\Users\vi\.pi\agent\sessions
+    pi SDK      : v1.5.2
+    bind        : 127.0.0.1:8787
+    setup       : http://127.0.0.1:8787/setup （仅本机：配 token/监听/白名单）
+
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
+[plugin:image-toolkit] registered AI tool: image_info
+[plugin:image-toolkit] registered AI tool: image_transform
+[plugin:image-toolkit] registered AI tool: image_compress
+[plugin:image-toolkit] registered AI tool: image_watermark
+[plugin:image-toolkit] registered AI tool: image_services
+[plugin:image-toolkit] registered AI tool: image_generate
+[plugin:image-toolkit] registered AI tool: image_config_service
+[plugin:image-toolkit] registered AI tool: image_pick_color
+[plugin:image-toolkit] AI 工具已注册（8 个）：image_info, image_transform, image_compress, image_watermark, image_services, image_generate, image_config_service, image_pick_color
+[plugin:image-toolkit] activated (v0.2.5)
+[plugin:md-chat] activated (v0.3.0)
+[plugin:pi-web-multigit] multi-git ready {"cwd":"E:\\Agent\\pi-web-ui\\repo","version":"0.14.0"}
+[plugin:pi-web-multigit] activated (v0.14.0)
+[plugin:response-speed] activated (v0.3.4)
+[plugin:session-archive] 会话归档已就绪：23 条记录（C:\Users\vi\.pi-web\session-archive\state.json）
+[plugin:session-archive] activated (v0.2.1)
+[plugin:superagent] activated (v0.1.5)
+[plugin:usage-ledger] 价格缓存：C:\Users\vi\.pi-web\prices.json（12876 行）
+[plugin:usage-ledger] activated (v2.1.1)
+[catalog] 插件市场列表预同步完成（共 0 个条目，按需安装）
+[plugin:usage-ledger] 回填：+0 新记录，2 条合并
+[mcp] [mcp] 目录监视不可用，mcp.json 热加载回落到 2000ms 轮询
