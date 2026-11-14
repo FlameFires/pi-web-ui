@@ -70,6 +70,8 @@ React + Capacitor 手机客户端、Hub 账号隔离推送与设备切换见 [`m
 
 侧栏子代理树从一级开始每层缩进 12px，有无子代理的行使用相同标题基线，层级仅通过缩进表达，不绘制连接线。折叠按钮使用细描边箭头并随深度同步右移；图标为 12×12px，独立点击区域为 18×24px，与标题保持 2px 间隔，提供悬停及键盘焦点反馈。运行中和其他客户端的对话树共用同一布局，按钮通过 `aria-expanded` 表达展开状态。层内样式与 `styles.css` 末尾结构复位规则保持一致，避免主题或选中态覆盖缩进。
 
+跨项目历史读取统一走 `pushSessionsForCwd`。UniversalSession（Claude/Codex）按请求项目读取存档并应用该项目的标题与分页限制，返回 `sessions.cwd` 和每行 `cwd`；读取不会切换当前工作区或覆盖活动对话列表。`use-session-list-requests.ts` 按项目跟踪回执，20 秒未返回时显示可重试状态；其他项目的回执不能结束本项目的加载。断线和引擎切换清理旧请求，重连后重新读取已展开项目，迟到的有效回执可恢复列表。验证见 `universal-session-list.test.ts`、`left-panel-session-loading.test.ts`。
+
 ## 工作树入口
 
 Git 工作树通过顶栏 `host:worktrees` 项目入口显示数量与未提交改动状态点，不再自动弹出或常驻警告横幅。入口参与统一布局及溢出菜单，点击切到 `worktrees` 页内视图；列表展示主仓库、当前工作树、完整分支名与路径，长文本换行。切换操作等待服务端 cwd/currentPath 确认后返回聊天，失败不提前退出；移除收在每项管理详情，确认后沿用非强制删除。
@@ -294,6 +296,7 @@ events.jsonl    追加式生命周期流水（有字节上限，截断后只留�
 - **内置服务商多密钥（不复制模型列表 + 纯名字通信）**：一个内置服务商（如 opencode/openai）可同时持有**多把 API key**，存于 `<agentDir>/provider-keys.json`（`{ <providerId>: { activeKeyName, keys:[{name,apiKey}] } }`），**模型目录始终复用该服务商的默认系统目录**，绝不复制进 models.json（`clone_provider` 只保留给程序化/测试路径，UI 已改为多密钥管理）。**安全**：前端**永远只拿到钥匙的**名字**（`ProviderKeyInfo={name,active}`），**原始 key 值 / 掩码片段（masked）一律不出服务端**——key 值只在添加时经 WS 上传一次落盘（同 auth.json）；`activate_provider_key`/`remove_provider_key` 都**按名字**寻址，服务端解析存储值。协议：`list_provider_keys` / `add_provider_key`（`{provider, apiKey, name?}`，名字自动去重）/ `activate_provider_key` / `remove_provider_key`，服务端回 `provider_keys`。**activeKey 与 auth.json + 运行时 override 同步**（`applyActiveKey`），切 key 后 `pushModels` 重推该服务商模型。前端模型下拉对多 key 服务商在左侧「供应商」栏**按 key 拆成多个条目**（供应商名在上、key 名在下，如 opencode 下 key1/key2 各一条，不拼接 `opencode-key2name`），**选中某 key 条目即只显示该服务商模型一次，点模型即切换激活 key** 再选模型——无需静态副本、始终最新；单 key 服务商仍显示普通单一条目。
 - **内置服务商 OAuth（开放授权）登录**：`ProviderStatus` 同时下发 `supportsApiKey`、`supportsOAuth`、`oauthName` 与 `usingOAuth`，模型管理页和首次设置页据此只展示服务商真正支持的认证入口及对应账号名称。登录由服务端 `ProviderOAuthFlowManager` 驱动 SDK（软件开发工具包）的 `ModelRuntime.login`，浏览器只接收选择题、验证地址、设备验证码和进度；SDK 返回的访问令牌与刷新令牌不进入 wire 协议。每个流程使用 `flowId + promptId` 关联回复，可取消；活动流程留在 `ClientSession`，浏览器重连后通过 `provider_oauth_flows` 恢复当前公开状态。登录成功后 OAuth 凭据成为该服务商的活动认证，并清除各项目保存的 API key 选择，防止切换项目时覆盖；登出统一调用 SDK 的 `logout`。
 - **token 反射防护**（issue #45）：`PI_WEB_TOKEN` 鉴权中间件里，`/api/health` 保持开放供探针，但 `Set-Cookie` 只在请求确实携带有效 token（`tokenOk(req)`）时才下发——匿名命中 `/api/health` 绝不反射真实 token cookie。回归：`tests/token-auth-test.mjs` 的「health does NOT leak pi_web_token」检查。
+- **未登录页走原生表单登录**（`server/unauthorized-page.ts` + `server/auth-login.ts`，`POST /__pi/auth`）：口令表单是**真 POST → 303 → GET**，并带 `autocomplete="username"` 的账号域 + `autocomplete="current-password"` 的密码域——只有这样才能让 Chrome/Safari/Firefox 在登录后询问「是否保存密码」（历史实现是 JS `preventDefault()` + `?token=` 跳转，浏览器不认为是登录，永远不弹）。回跳目标统一走 `sanitizeNextPath`：只允许同源绝对路径（禁 `//host`、`\`、控制字符）并剔除 `token`/`__tried_cached_token`/`auth_error` 查询参数；口令错误 303 回 `?auth_error=1`，未登录页据此渲染「口令不正确」。`?token=` / Bearer / X-PI-Token 旧路径全部保留。回归：`tests/unit/auth-login.test.ts`、`tests/unit/unauthorized-page.test.ts`、`tests/token-auth-test.mjs`。
 - **dev 兼容**：vite :5173 代理 /ws 到 :8788 时 Origin(:5173) ≠ Host(:8788)，靠 `PI_WEB_ALLOW_ORIGINS`（dev:server 内置）放行，勿删。
 
 ## 主题切换
@@ -412,7 +415,9 @@ events.jsonl    追加式生命周期流水（有字节上限，截断后只留�
 
 1. **全局关**：设置 →「工具」页的「工具执行审批」总开关（`ClientSettings.toolApprovalEnabled`，默认开，纯运行开关不进预设）。关掉后一切审批都不弹——内置高危检测直接放行、插件 pre guard 的 `ask` 也按放行处理（`withToolGuard` 的 `ask` 分支只改 `needApproval`，最终都经 `askApproval` 定夺）；开关被关掉的那一刻，挂着的待审批项由 `autoApprovePendingApprovals` 全部按批准放行（不让人对着弹窗干等）。
 2. **本对话全部允许**（弹窗按钮，`tool_approval_response.scope = "all"`）：该对话后续任何高危操作都不再询问。
-3. **本对话允许同类**（弹窗按钮，`scope = "category"`，仅在本次命中规则档位时出现）：只放行同一档位。档位 = `UiApprovalCategory{ id, label, labelEn }`，id 稳定不许改名：`bash.rm-rf` / `bash.win-del` / `bash.disk` / `bash.git-destructive` / `bash.chmod` / `bash.system-redirect` / `file.sensitive.env` / `file.sensitive.ssh` / `file.sensitive.shell` / `file.outside-workspace` / `plugin:<pluginId>`（插件 pre guard 的 `ask` 按插件分档）。无档位的拦截（自定义 reason）只受前两档影响。
+3. **本对话允许同类**（弹窗按钮，`scope = "category"`，仅在本次命中规则档位时出现）：只放行同一档位。档位 = `UiApprovalCategory{ id, label, labelEn }`，id 稳定不许改名：`bash.rm-rf` / `bash.win-del` / `bash.disk` / `bash.git-destructive` / `bash.chmod` / `bash.system-redirect` / `file.sensitive.env` / `file.sensitive.ssh` / `file.sensitive.shell` / `file.outside-workspace` / `phone.gesture` / `phone.input` / `phone.key` / `phone.launch` / `plugin:<pluginId>`（插件 pre guard 的 `ask` 按插件分档）。无档位的拦截（自定义 reason）只受前两档影响。
+
+**手机操控档（#902）**：`phone` 工具的 `op` 分读屏档（`status`/`dump`/`screenshot`）与操控档（`tap`/`long_press`/`swipe`/`input`/`key`/`launch`，单源 `server/phone-tool.ts` 的 `PHONE_READ_OPS` / `PHONE_CONTROL_OPS`）。**读屏档不建规则**（默认不拦截）；操控档由 `PHONE_APPROVAL_GROUPS` 派生出 4 条内置 `ask` 规则（`builtin.phone.*`，`field: "params"` 匹配 `op`，容空白/大小写），因此每档既能单独停用（等价于「只允许读屏」「launch 才问」这类粒度），也能按档「记住本类」。工具描述与设置文案必须写明「开启即授权整机操控，但每个操控 op 先问」，不要退回到「无逐操作审批」的旧口径。回归：`tests/unit/phone-tool-ops.test.ts`。
 
 **策略挂在哪**：`Conversation.approvalPolicy = { allowAll, categories: Map<id, UiApprovalCategory> }`，**仅内存**（不落 client-state），且挂在对话对象上而不是 ClientSession——手动过户搬的就是对话本体，策略跟着走；重启服务 / 新对话即恢复询问。记住后同对话内**已被新策略覆盖的其它待审批项一并放行**（`approveCoveredPending`），并给一句回执 notice。
 

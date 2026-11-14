@@ -139,6 +139,7 @@ export interface HubRelay {
 		deviceId: string,
 		redirect?: boolean,
 		preferLan?: boolean,
+		p2pOffer?: unknown,
 	) => Promise<void>;
 	handleRequest?: (req: IncomingMessage, res: ServerResponse) => boolean;
 	handleAliasOpen?: (req: IncomingMessage, res: ServerResponse, deviceId: string) => Promise<void>;
@@ -442,6 +443,15 @@ export async function createDeviceHub(options: DeviceHubOptions) {
 		autoCleanupIntervalMs: 60000,
 		defaultTtlMs: currentSettings().resourceLockDefaultTtlMs,
 		persistPath: options.dataDir ? join(options.dataDir, "hub-locks.json") : undefined,
+		isAlive: (taskId) => {
+			const task = store.snapshot().tasks.find((t) => t.id === taskId);
+			if (!task || task.status !== "running") return false;
+			const now = Date.now();
+			if (task.recoveryUntil !== undefined && now <= task.recoveryUntil) return true;
+			if (hasTaskLease(task)) return true;
+			if (task.lastHeartbeatAt !== undefined && now - task.lastHeartbeatAt <= 30 * 60_000) return true;
+			return false;
+		},
 	});
 	const ip = (req: Request) => req.socket.remoteAddress ?? "unknown";
 	const visibleDevice = (device: ReturnType<typeof publicDevice>) => ({
@@ -3342,6 +3352,7 @@ export async function createDeviceHub(options: DeviceHubOptions) {
 			String(req.params.id),
 			false,
 			users.has(req) && req.body?.preferLan === true,
+			users.has(req) ? req.body?.p2pOffer : undefined,
 		);
 	});
 	app.use((error: Error & { status?: number; code?: string }, _req: Request, res: Response, _next: NextFunction) => {
@@ -3929,7 +3940,7 @@ export async function createDeviceHub(options: DeviceHubOptions) {
 				reason: "Invalid renew payload or missing leaseToken",
 			};
 		}
-		return await store.transact((draft) => {
+		const result = await store.transact((draft) => {
 			const device = draft.devices.find((d) => d.id === deviceId);
 			const task = draft.tasks.find(
 				(t) =>
@@ -3992,8 +4003,17 @@ export async function createDeviceHub(options: DeviceHubOptions) {
 				task.lastHeartbeatAt = now;
 				task.updatedAt = now;
 			}
-			return { taskId: renew.taskId, attemptId: renew.attemptId, accepted: true };
+			return { taskId: renew.taskId, attemptId: renew.attemptId, accepted: true, roomId: task.roomId };
 		});
+		if (result.accepted && (result as { roomId?: string }).roomId) {
+			// 运行中任务续租即续锁：长任务（>10min TTL）不因锁到期被静默摘锁、互斥不中断。
+			try {
+				lockManager.renewLocks((result as { roomId: string }).roomId, renew.taskId);
+			} catch {}
+		}
+		// transact 返回含内部 roomId，协议只允许 taskId/attemptId/accepted/reason，剥离后再返回。
+		const { roomId: _omit, ...publicResult } = result as unknown as Record<string, unknown>;
+		return publicResult as unknown as DeviceTaskLeaseResult;
 	}
 
 	const toolLifecycleSeqs = new Map<string, number>();

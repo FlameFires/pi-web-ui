@@ -47,6 +47,7 @@ import type {
 	UiPendingQuestion,
 	UiQueuedQuestion,
 	UiPluginCatalogEntry,
+	UiExtensionInventoryEntry,
 	UiPluginInfo,
 	UiPluginUpdateInfo,
 	UiPresetCatalogEntry,
@@ -391,6 +392,7 @@ export interface ChatState {
 	} | null;
 	plugins: UiPluginInfo[];
 	pluginsEpoch: number;
+	extensionInventory: UiExtensionInventoryEntry[] | null;
 	pluginUpdates: Record<string, UiPluginUpdateInfo> | null;
 	checkingPluginUpdates: boolean;
 	pluginCatalog: UiPluginCatalogEntry[];
@@ -432,6 +434,7 @@ export interface ChatState {
 	dshPresets: { presets: UiAgentPreset[]; defaultPreset: string } | null;
 	dshPermission: { options: DshPermissionOption[]; defaultPreset: string } | null;
 	scmDirty: number;
+	extensionInventoryDirty: number;
 	protocolMismatch: boolean;
 	mcpOAuthResult: Extract<ServerMessage, { type: "mcp_oauth_result" }> | null;
 	mcpMarketResult: {
@@ -571,6 +574,7 @@ type Action =
 			};
 	  }
 	| { type: "scm_changed" }
+	| { type: "extension_inventory_changed" }
 	| { type: "install_result"; result: { ok: boolean; detail: string } }
 	| {
 			type: "path_completions";
@@ -698,6 +702,7 @@ type Action =
 	| { type: "scheduler_tasks"; tasks: SchedulerTaskView[] }
 	| { type: "plugin_panel_items"; groups: PluginPanelGroup[] }
 	| { type: "plugins"; plugins: UiPluginInfo[]; epoch: number }
+	| { type: "extension_inventory"; entries: UiExtensionInventoryEntry[] }
 	| { type: "plugin_updates"; updates: UiPluginUpdateInfo[] }
 	| { type: "plugin_updates_check_started" }
 	| { type: "plugin_catalog"; entries: UiPluginCatalogEntry[]; epoch: number }
@@ -1180,6 +1185,8 @@ export function reducer(state: ChatState, action: Action): ChatState {
 			return { ...state, sessionSearch: action.result };
 		case "scm_changed":
 			return { ...state, scmDirty: state.scmDirty + 1 };
+		case "extension_inventory_changed":
+			return { ...state, extensionInventoryDirty: state.extensionInventoryDirty + 1 };
 		case "path_completions":
 			return { ...state, pathCompletions: action.completions };
 		case "update_status":
@@ -1281,6 +1288,8 @@ export function reducer(state: ChatState, action: Action): ChatState {
 			return { ...state, pluginPanelGroups: action.groups };
 		case "plugins":
 			return { ...state, plugins: action.plugins, pluginsEpoch: action.epoch };
+		case "extension_inventory":
+			return { ...state, extensionInventory: action.entries };
 		case "plugin_updates_check_started":
 			return { ...state, checkingPluginUpdates: true };
 		case "plugin_updates": {
@@ -1853,8 +1862,10 @@ export function useChat() {
 		fileSearch: null,
 		sessionSearch: null,
 		scmDirty: 0,
+		extensionInventoryDirty: 0,
 		plugins: [],
 		pluginsEpoch: 0,
+		extensionInventory: null,
 		pluginUpdates: null,
 		checkingPluginUpdates: false,
 		pluginCatalog: [],
@@ -2555,6 +2566,9 @@ export function useChat() {
 				case "scm_changed":
 					dispatch({ type: "scm_changed" });
 					break;
+				case "extension_inventory_changed":
+					dispatch({ type: "extension_inventory_changed" });
+					break;
 				case "tool_info":
 					receiveToolInfo(msg);
 					break;
@@ -2878,6 +2892,9 @@ export function useChat() {
 					break;
 				case "plugins":
 					dispatch({ type: "plugins", plugins: msg.plugins, epoch: msg.epoch });
+					break;
+				case "extension_inventory_data":
+					dispatch({ type: "extension_inventory", entries: msg.entries ?? [] });
 					break;
 				case "plugin_updates":
 					dispatch({ type: "plugin_updates", updates: msg.updates });

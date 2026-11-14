@@ -14,6 +14,7 @@ import {
 import { normalizeToolPromptOverrides, type ToolPromptOverrideMap } from "./tool-prompt-overrides.js";
 import { UI_SLOTS } from "./plugin-ui-slots.js";
 import { DEFAULT_PROMPT_DISABLED } from "./prompt-composer.js";
+import { isPromptOnlyPreset } from "./preset-fields.js";
 import type { EngineId, QueueMode, ThinkingLevel, UiAlign, UiLayoutPrefs, UiSlotId } from "./protocol.js";
 import { mergeQuickAskSettings, normalizeQuickAskSettings, type QuickAskSettings } from "./quick-ask-settings.js";
 
@@ -610,6 +611,8 @@ export const DEFAULT_DARK_MINIMAL_SETTINGS: ClientSettings = Object.freeze({
 		"pm2",
 		"qq",
 		"quota_status",
+		"session_migrate_export",
+		"session_migrate_from_jsonl",
 		"session_migrate_import",
 		"session_migrate_scan",
 		"slack",
@@ -801,6 +804,7 @@ export interface SettingsPreset extends Partial<ClientSettings> {
 export function settingsPresetToUi(p: SettingsPreset): import("./protocol.js").UiSettingsPreset {
 	return {
 		name: p.name,
+		...(isPromptOnlyPreset(p) ? { scope: "prompt" as const } : {}),
 		...(p.plugins ? { plugins: p.plugins } : {}),
 		promptMode: p.promptMode === "replace" ? "replace" : "append",
 		customSystemPrompt: p.customSystemPrompt ?? "",
@@ -1997,6 +2001,7 @@ export class ClientStateStore {
 	/**
 	 * 【一次性迁移】旧版独立的「启用标记工具（全局）」开关是否被关掉。
 	 * `undefined` = 旧数据里没有这个字段。新语义「全关即全局关闭」由 MarkerService 从 disabledMarkers 派生。
+	 *  sunset 计划：v0.123 移除该兼容分支（旧数据普及后，与「全关即全局关闭」长期并存会造成语义模糊）。
 	 */
 	getLegacyMarkersGlobalOff(): boolean | undefined {
 		const markers = this.load()[ClientStateStore.GLOBAL_SETTINGS_KEY]?.markers as unknown as

@@ -74,6 +74,245 @@ function fileKind(f: ScmFile): FileKind {
 	return "unstaged";
 }
 
+function isDiffMetaLine(ln: string): boolean {
+	return (
+		ln.startsWith("diff --git") ||
+		ln.startsWith("index ") ||
+		ln.startsWith("new file") ||
+		ln.startsWith("deleted file") ||
+		ln.startsWith("old mode") ||
+		ln.startsWith("new mode") ||
+		ln.startsWith("similarity index") ||
+		ln.startsWith("rename ") ||
+		ln.startsWith("copy ") ||
+		ln.startsWith("Binary files") ||
+		ln.startsWith("---") ||
+		ln.startsWith("+++")
+	);
+}
+
+function estimateDiffStats(text: string): { add: number; del: number; hunks: number } {
+	let add = 0;
+	let del = 0;
+	let hunks = 0;
+	for (const ln of text.split("\n")) {
+		if (ln.startsWith("@@")) {
+			hunks += 1;
+		} else if (ln.startsWith("+++") || ln.startsWith("---")) {
+			continue;
+		} else if (ln.startsWith("+")) {
+			add += 1;
+		} else if (ln.startsWith("-")) {
+			del += 1;
+		}
+	}
+	return { add, del, hunks };
+}
+
+function estimateMultiDiffStats(texts: string[]): { add: number; del: number; hunks: number } {
+	let add = 0;
+	let del = 0;
+	let hunks = 0;
+	for (const text of texts) {
+		if (!text) continue;
+		const s = estimateDiffStats(text);
+		add += s.add;
+		del += s.del;
+		hunks += s.hunks;
+	}
+	return { add, del, hunks };
+}
+
+interface ScmStashEntry {
+	ref: string;
+	message: string;
+}
+
+interface ScmBlameLine {
+	hash: string;
+	shortHash: string;
+	author: string;
+	date: string;
+	lineNo: number;
+	content: string;
+}
+
+function stripAnsiForScm(s: string): string {
+	return s
+		.replace(/\x1b\][^\x07\x1b]*(\x07|\x1b\\)/g, "")
+		.replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, "")
+		.replace(/\x1b\(B/g, "")
+		.replace(/\r/g, "");
+}
+
+function parseStashListText(text: string): ScmStashEntry[] {
+	const out: ScmStashEntry[] = [];
+	for (const raw of stripAnsiForScm(text).split("\n")) {
+		const ln = raw.trim();
+		if (!ln) continue;
+		const m = /^(stash@\{\d+\}):\s*(.*)$/.exec(ln);
+		if (m) out.push({ ref: m[1], message: m[2] });
+	}
+	return out;
+}
+
+function formatBlameDate(authorTimeSec: number): string {
+	if (!Number.isFinite(authorTimeSec) || authorTimeSec <= 0) return "";
+	try {
+		return new Date(authorTimeSec * 1000).toISOString().slice(0, 10);
+	} catch {
+		return "";
+	}
+}
+
+function parseBlamePorcelainText(text: string): ScmBlameLine[] {
+	const clean = stripAnsiForScm(text);
+	const lines = clean.split("\n");
+	const out: ScmBlameLine[] = [];
+	let hash = "";
+	let author = "";
+	let authorTime = 0;
+	let finalStart = 0;
+	let blockCount = 0;
+	let inBlock = false;
+	const flushContent = (content: string) => {
+		if (!inBlock || blockCount <= 0) return;
+		const lineNo = finalStart + blockCountConsumedRef.value;
+		out.push({
+			hash,
+			shortHash: /^[0]+$/.test(hash) ? "0000000" : hash.slice(0, 7),
+			author: author || "?",
+			date: formatBlameDate(authorTime),
+			lineNo,
+			content,
+		});
+		blockCountConsumedRef.value += 1;
+	};
+	const blockCountConsumedRef = { value: 0 };
+	for (const raw of lines) {
+		const ln = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
+		const hm = /^([0-9a-f]{40}|0{40}) \d+ (\d+) (\d+)$/.exec(ln);
+		if (hm) {
+			hash = hm[1];
+			author = "";
+			authorTime = 0;
+			finalStart = Number(hm[2]);
+			blockCount = Number(hm[3]);
+			blockCountConsumedRef.value = 0;
+			inBlock = true;
+			continue;
+		}
+		if (!inBlock) continue;
+		if (ln.startsWith("author ") && !ln.startsWith("author-mail") && !ln.startsWith("author-time")) {
+			author = ln.slice("author ".length);
+			continue;
+		}
+		if (ln.startsWith("author-time ")) {
+			authorTime = Number(ln.slice("author-time ".length).trim());
+			continue;
+		}
+		if (ln.startsWith("\t")) {
+			flushContent(ln.slice(1));
+			if (blockCountConsumedRef.value >= blockCount) {
+				inBlock = false;
+			}
+			continue;
+		}
+		if (ln.startsWith("filename ")) continue;
+		if (ln.startsWith("boundary")) continue;
+	}
+	return out.slice(0, 3000);
+}
+
+function isValidBranchName(name: string): boolean {
+	if (!name || name.length > 200) return false;
+	if (/\s/.test(name)) return false;
+	if (name.includes("..")) return false;
+	if (/[~^:?*\\[\]]/.test(name)) return false;
+	if (name.startsWith("/") || name.endsWith("/")) return false;
+	if (name.includes("//")) return false;
+	if (name.endsWith(".lock") || name.endsWith(".")) return false;
+	if (name.startsWith("-") || name.includes("@{")) return false;
+	return /^[A-Za-z0-9._/-]+$/.test(name);
+}
+
+function isValidStashRef(ref: string): boolean {
+	return /^stash@\{\d+\}$/.test(ref.trim());
+}
+
+function parseHunkHeader(ln: string): { oldStart: number; newStart: number } | null {
+	const m = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(ln);
+	if (!m) return null;
+	return { oldStart: Number(m[1]), newStart: Number(m[2]) };
+}
+
+type SideCell = { no: number | null; text: string; kind: "ctx" | "add" | "del" | "empty" };
+type SideRow = { kind: "hdr" | "hunk"; text: string } | { kind: "pair"; left: SideCell; right: SideCell };
+
+function buildSideRows(text: string): SideRow[] {
+	const rows: SideRow[] = [];
+	let oldLine = 0;
+	let newLine = 0;
+	let haveNos = false;
+	let pendingDel: { no: number | null; text: string }[] = [];
+	let pendingAdd: { no: number | null; text: string }[] = [];
+	const flush = () => {
+		const n = Math.max(pendingDel.length, pendingAdd.length);
+		for (let i = 0; i < n; i++) {
+			const d = pendingDel[i];
+			const a = pendingAdd[i];
+			rows.push({
+				kind: "pair",
+				left: d ? { no: d.no, text: d.text, kind: "del" } : { no: null, text: "", kind: "empty" },
+				right: a ? { no: a.no, text: a.text, kind: "add" } : { no: null, text: "", kind: "empty" },
+			});
+		}
+		pendingDel = [];
+		pendingAdd = [];
+	};
+	for (const ln of text.split("\n")) {
+		if (ln.startsWith("@@")) {
+			flush();
+			const p = parseHunkHeader(ln);
+			if (p) {
+				oldLine = p.oldStart;
+				newLine = p.newStart;
+				haveNos = true;
+			}
+			rows.push({ kind: "hunk", text: ln });
+			continue;
+		}
+		if (isDiffMetaLine(ln) || ln.startsWith("\\ ")) {
+			flush();
+			rows.push({ kind: "hdr", text: ln });
+			continue;
+		}
+		if (ln.startsWith("+")) {
+			pendingAdd.push({ no: haveNos ? newLine : null, text: ln.slice(1) });
+			if (haveNos) newLine += 1;
+			continue;
+		}
+		if (ln.startsWith("-")) {
+			pendingDel.push({ no: haveNos ? oldLine : null, text: ln.slice(1) });
+			if (haveNos) oldLine += 1;
+			continue;
+		}
+		flush();
+		const ctx = ln.startsWith(" ") ? ln.slice(1) : ln;
+		rows.push({
+			kind: "pair",
+			left: { no: haveNos ? oldLine : null, text: ctx, kind: "ctx" },
+			right: { no: haveNos ? newLine : null, text: ctx, kind: "ctx" },
+		});
+		if (haveNos) {
+			oldLine += 1;
+			newLine += 1;
+		}
+	}
+	flush();
+	return rows;
+}
+
 interface ScmTerminalBridge {
 	create: (meta: TerminalMeta) => void;
 	close: (id: string) => void;
@@ -120,6 +359,17 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 		parseScmSidebarWidth(localStorage.getItem(SCM_SIDEBAR_WIDTH_KEY)),
 	);
 	const [commitMsg, setCommitMsg] = useState("");
+	const [stashUntracked, setStashUntracked] = useState(false);
+	const [stashList, setStashList] = useState<ScmStashEntry[] | null>(null);
+	const [stashLoading, setStashLoading] = useState(false);
+	const [stashRefInput, setStashRefInput] = useState("stash@{0}");
+	const [showBlame, setShowBlame] = useState(false);
+	const [blameLines, setBlameLines] = useState<ScmBlameLine[] | null>(null);
+	const [blameLoading, setBlameLoading] = useState(false);
+	const [blameError, setBlameError] = useState<string | null>(null);
+	const [diffView, setDiffView] = useState<"inline" | "side">("inline");
+	const [showLineNos, setShowLineNos] = useState(true);
+	const [isNarrow, setIsNarrow] = useState(false);
 	const [historyFilter, setHistoryFilter] = useState("");
 	const [commitHistory, setCommitHistory] = useState<string[]>(() => loadCommitHistory());
 	const recallRef = useRef<CommitRecallState>(COMMIT_RECALL_INITIAL);
@@ -423,6 +673,31 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 		[notRepo, runGitCommand],
 	);
 
+	const handleStageAll = useCallback(() => {
+		if (notRepo) return;
+		runGitCommand("git add", "git add -A");
+	}, [notRepo, runGitCommand]);
+
+	const handleUnstageAll = useCallback(() => {
+		if (notRepo) return;
+		runGitCommand("git reset", "git reset HEAD");
+	}, [notRepo, runGitCommand]);
+
+	const handleDiscard = useCallback(
+		(f: ScmFile) => {
+			if (notRepo) return;
+			const untracked = fileKind(f) === "untracked";
+			const ok = window.confirm(t(untracked ? "scmDiscardUntrackedConfirm" : "scmDiscardConfirm", { path: f.path }));
+			if (!ok) return;
+			if (untracked) {
+				runGitCommand("rm", `rm -rf -- ${quotePath(f.path)}`);
+			} else {
+				runGitCommand("git restore", `git restore --source=HEAD -- ${quotePath(f.path)}`);
+			}
+		},
+		[notRepo, runGitCommand, t],
+	);
+
 	const handleSwitch = useCallback(() => {
 		if (!branchSel || notRepo) return;
 		const entry = branches.find((x) => x.name === branchSel);
@@ -436,6 +711,273 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 
 	const handlePush = useCallback(() => runGitCommand("git push", "git push"), [runGitCommand]);
 	const handlePull = useCallback(() => runGitCommand("git pull", "git pull"), [runGitCommand]);
+
+	const runGitCapture = useCallback(
+		(
+			title: string,
+			innerCommand: string,
+			startMarker: string,
+			endMarker: string,
+			onCaptured: (text: string) => void,
+		) => {
+			if (!chat.ready) return;
+			const convId = chat.activeConversationId || chat.state?.conversationId || "";
+			const command = `echo ${startMarker}; ${innerCommand}; echo ${endMarker}`;
+			const def: CommandDef = { name: title, command, cwd: "${pwd}" };
+			let targetId: string;
+			const existing = chat.terminals.find((tm) => tm.title === title);
+			if (existing) {
+				terminal.restart(existing.id);
+				appSend({
+					type: "run_command",
+					terminalId: existing.id,
+					conversationId: existing.conversationId,
+					command: def,
+					cols: 120,
+					rows: 24,
+				});
+				targetId = existing.id;
+			} else {
+				targetId = randomUuid();
+				terminal.create({
+					id: targetId,
+					conversationId: convId,
+					title,
+					cwd: chat.state?.cwd ?? "",
+					cols: 120,
+					rows: 24,
+					running: true,
+					exitCode: null,
+					command: def,
+				});
+			}
+			let buf = "";
+			let done = false;
+			let unsub: (() => void) | null = null;
+			const finish = (text: string) => {
+				if (done) return;
+				done = true;
+				try {
+					unsub?.();
+				} catch {}
+				onCaptured(text);
+			};
+			try {
+				unsub = terminal.register(convId, targetId, {
+					write(data: string) {
+						if (done) return;
+						buf += data;
+						if (buf.length > 2_000_000) buf = buf.slice(-2_000_000);
+						const clean = stripAnsiForScm(buf);
+						const si = clean.indexOf(startMarker);
+						const ei = clean.indexOf(endMarker);
+						if (si >= 0 && ei > si) {
+							finish(clean.slice(si + startMarker.length, ei));
+						}
+					},
+					dispose() {},
+				});
+			} catch {}
+			window.setTimeout(() => {
+				if (!done) {
+					done = true;
+					try {
+						unsub?.();
+					} catch {}
+				}
+			}, 15000);
+		},
+		[chat.ready, chat.activeConversationId, chat.state?.conversationId, chat.state?.cwd, chat.terminals, terminal],
+	);
+
+	const handleStashList = useCallback(() => {
+		if (notRepo) return;
+		setStashLoading(true);
+		runGitCapture("git stash list", "git stash list", "__SCM_STASH_LIST_START__", "__SCM_STASH_LIST_END__", (text) => {
+			setStashList(parseStashListText(text));
+			setStashLoading(false);
+		});
+		window.setTimeout(() => setStashLoading(false), 16000);
+	}, [notRepo, runGitCapture]);
+
+	const handleStashSave = useCallback(() => {
+		if (notRepo) return;
+		const msg = window.prompt(t("scmStashMsgPrompt"), "");
+		if (msg === null) return;
+		const scope = stashUntracked ? t("scmStashScopeUntracked") : "";
+		if (!window.confirm(t("scmStashSaveConfirm", { scope }))) return;
+		const trimmed = msg.trim();
+		const escaped = trimmed.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/`/g, "\\`").replace(/\$/g, "\\$");
+		const parts = ["git stash push"];
+		if (stashUntracked) parts.push("-u");
+		if (trimmed) parts.push(`-m "${escaped}"`);
+		runGitCommand("git stash", parts.join(" "));
+		handleStashList();
+	}, [notRepo, stashUntracked, runGitCommand, handleStashList, t]);
+
+	const stashTargetRef = useCallback(() => {
+		const ref = stashRefInput.trim() || "stash@{0}";
+		if (!isValidStashRef(ref)) {
+			window.alert(t("scmStashRefPrompt"));
+			return null;
+		}
+		return ref;
+	}, [stashRefInput, t]);
+
+	const handleStashPopWithRef = useCallback(
+		(ref: string) => {
+			if (notRepo) return;
+			if (!window.confirm(t("scmStashPopConfirm", { ref }))) return;
+			runGitCommand("git stash", `git stash pop '${ref}'`);
+		},
+		[notRepo, runGitCommand, t],
+	);
+
+	const handleStashApplyWithRef = useCallback(
+		(ref: string) => {
+			if (notRepo) return;
+			if (!window.confirm(t("scmStashApplyConfirm", { ref }))) return;
+			runGitCommand("git stash", `git stash apply '${ref}'`);
+		},
+		[notRepo, runGitCommand, t],
+	);
+
+	const handleStashDropWithRef = useCallback(
+		(ref: string) => {
+			if (notRepo) return;
+			if (!window.confirm(t("scmStashDropConfirm", { ref }))) return;
+			runGitCommand("git stash", `git stash drop '${ref}'`);
+		},
+		[notRepo, runGitCommand, t],
+	);
+
+	const handleStashPop = useCallback(() => {
+		const ref = stashTargetRef();
+		if (ref) handleStashPopWithRef(ref);
+	}, [stashTargetRef, handleStashPopWithRef]);
+
+	const handleStashApply = useCallback(() => {
+		const ref = stashTargetRef();
+		if (ref) handleStashApplyWithRef(ref);
+	}, [stashTargetRef, handleStashApplyWithRef]);
+
+	const handleStashDrop = useCallback(() => {
+		const ref = stashTargetRef();
+		if (ref) handleStashDropWithRef(ref);
+	}, [stashTargetRef, handleStashDropWithRef]);
+
+	const handleAmend = useCallback(() => {
+		if (notRepo) return;
+		const msg = commitMsg.trim();
+		if (msg) {
+			if (!window.confirm(t("scmAmendConfirmWithMsg"))) return;
+			const escaped = msg.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/`/g, "\\`").replace(/\$/g, "\\$");
+			runGitCommand("git commit", `git add -A && git commit --amend -m "${escaped}"`);
+			setCommitHistory(rememberCommitMessage(msg));
+			setCommitMsg("");
+			recallRef.current = COMMIT_RECALL_INITIAL;
+		} else {
+			if (!window.confirm(t("scmAmendConfirmNoMsg"))) return;
+			runGitCommand("git commit", "git add -A && git commit --amend --no-edit");
+		}
+	}, [notRepo, commitMsg, runGitCommand, t]);
+
+	const handleBranchCreate = useCallback(() => {
+		if (notRepo) return;
+		const name = (window.prompt(t("scmBranchNewPrompt"), "") ?? "").trim();
+		if (!name) return;
+		if (!isValidBranchName(name)) {
+			window.alert(t("scmBranchInvalid"));
+			return;
+		}
+		if (!window.confirm(t("scmBranchCreateConfirm", { name }))) return;
+		runGitCommand("git checkout", `git checkout -b ${name}`);
+	}, [notRepo, runGitCommand, t]);
+
+	const handleBranchDelete = useCallback(() => {
+		if (notRepo) return;
+		if (!branchSel) {
+			window.alert(t("scmBranchNoSelection"));
+			return;
+		}
+		if (status && !status.detached && branchSel === status.branch) {
+			window.alert(t("scmBranchDeleteCurrent"));
+			return;
+		}
+		if (!window.confirm(t("scmBranchDeleteConfirm", { name: branchSel }))) return;
+		runGitCommand("git branch", `git branch -d ${branchSel}`);
+	}, [notRepo, branchSel, status, runGitCommand, t]);
+
+	const handleBranchForceDelete = useCallback(() => {
+		if (notRepo) return;
+		if (!branchSel) {
+			window.alert(t("scmBranchNoSelection"));
+			return;
+		}
+		if (status && !status.detached && branchSel === status.branch) {
+			window.alert(t("scmBranchDeleteCurrent"));
+			return;
+		}
+		if (!window.confirm(t("scmBranchForceDeleteConfirm1", { name: branchSel }))) return;
+		if (!window.confirm(t("scmBranchForceDeleteConfirm2", { name: branchSel }))) return;
+		runGitCommand("git branch", `git branch -D ${branchSel}`);
+	}, [notRepo, branchSel, status, runGitCommand, t]);
+
+	const handleBranchRename = useCallback(() => {
+		if (notRepo || !status || status.detached) return;
+		const cur = status.branch;
+		if (!cur) return;
+		const next = (window.prompt(t("scmBranchRenamePrompt", { name: cur }), cur) ?? "").trim();
+		if (!next || next === cur) return;
+		if (!isValidBranchName(next)) {
+			window.alert(t("scmBranchInvalid"));
+			return;
+		}
+		if (!window.confirm(t("scmBranchRenameConfirm", { old: cur, new: next }))) return;
+		runGitCommand("git branch", `git branch -m ${next}`);
+	}, [notRepo, status, runGitCommand, t]);
+
+	const fetchBlame = useCallback(
+		(path: string) => {
+			if (notRepo || !path) return;
+			setBlameLoading(true);
+			setBlameError(null);
+			runGitCapture(
+				"git blame",
+				`git blame --line-porcelain -- ${quotePath(path)}`,
+				"__SCM_BLAME_START__",
+				"__SCM_BLAME_END__",
+				(text) => {
+					const parsed = parseBlamePorcelainText(text);
+					if (parsed.length === 0) {
+						setBlameLines(null);
+						setBlameError(t("scmBlameFail"));
+					} else {
+						setBlameLines(parsed);
+						setBlameError(null);
+					}
+					setBlameLoading(false);
+				},
+			);
+			window.setTimeout(() => setBlameLoading(false), 16000);
+		},
+		[notRepo, runGitCapture, t],
+	);
+
+	const handleBlameToggle = useCallback(() => {
+		setShowBlame((prev) => {
+			const next = !prev;
+			if (next && selected && selected.x !== "?" && selected.y !== "?") {
+				window.setTimeout(() => fetchBlame(selected.path), 0);
+			} else if (next && selected) {
+				window.setTimeout(() => {
+					setBlameLines(null);
+					setBlameError(t("scmBlameEmpty"));
+				}, 0);
+			}
+			return next;
+		});
+	}, [selected, fetchBlame, t]);
 
 	const handleGenCommitMsg = useCallback(() => {
 		if (genLoading || notRepo || !chat.ready || chat.status !== "open") return;
@@ -456,6 +998,14 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 	useEffect(() => {
 		if (active) refresh();
 	}, [active, refresh]);
+
+	useEffect(() => {
+		const mq = window.matchMedia("(max-width: 768px)");
+		const update = () => setIsNarrow(mq.matches);
+		update();
+		mq.addEventListener("change", update);
+		return () => mq.removeEventListener("change", update);
+	}, []);
 
 	useEffect(() => {
 		if (viewMode === "history" && status) loadHistory();
@@ -481,13 +1031,32 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 		const finishedGitWrite = chat.terminals.some((tm) => {
 			if (tm.running !== false) return false;
 			const wasRunning = prev.find((p) => p.id === tm.id)?.running === true;
-			return wasRunning && tm.title.startsWith("git ");
+			return wasRunning && (tm.title.startsWith("git ") || tm.title === "rm");
 		});
 		if (finishedGitWrite && chat.ready && chat.status === "open") {
 			refresh(false, true);
 			if (viewMode === "history" && status) loadHistory();
 		}
 	}, [chat.terminals, active, chat.ready, chat.status, refresh, viewMode, status, loadHistory]);
+
+	useEffect(() => {
+		if (!showBlame) return;
+		if (!selected || selected.x === "?" || selected.y === "?") {
+			setBlameLines(null);
+			setBlameLoading(false);
+			setBlameError(selected ? t("scmBlameEmpty") : null);
+			return;
+		}
+		fetchBlame(selected.path);
+	}, [showBlame, selected, fetchBlame, t]);
+
+	useEffect(() => {
+		setStashList(null);
+		setStashLoading(false);
+		setBlameLines(null);
+		setBlameError(null);
+		setBlameLoading(false);
+	}, [chat.state?.cwd]);
 
 	const kindLabels: Record<FileKind, string> = {
 		staged: t("scmStaged"),
@@ -497,6 +1066,20 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 	};
 
 	const filteredHistory = filterScmCommits(history, historyFilter);
+	const effectiveDiffView = isNarrow ? "inline" : diffView;
+	const allFiles = status?.files ?? [];
+	const selIdx = selected ? allFiles.findIndex((f) => f.path === selected.path) : -1;
+	const prevFile = selIdx > 0 ? allFiles[selIdx - 1] : null;
+	const nextFile = selIdx >= 0 && selIdx < allFiles.length - 1 ? allFiles[selIdx + 1] : null;
+	const fileEstimate =
+		fileDiff && !fileDiff.untracked ? estimateMultiDiffStats([fileDiff.staged, fileDiff.worktree]) : null;
+	const fileStatEntry = selected ? statMap.get(selected.path) : undefined;
+	const fileAdd = fileStatEntry?.add ?? fileEstimate?.add ?? 0;
+	const fileDel = fileStatEntry?.del ?? fileEstimate?.del ?? 0;
+	const fileHunks = fileEstimate?.hunks ?? 0;
+	const commitStats = commitDetail ? estimateDiffStats(commitDetail) : null;
+	const renderText = (text: string) =>
+		effectiveDiffView === "side" ? renderSideBySide(text, showLineNos) : renderDiff(text);
 
 	const renderDiff = (text: string) => {
 		const lines = text.split("\n");
@@ -504,20 +1087,7 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 			<pre className="scm-diff-pre">
 				{lines.map((ln, i) => {
 					let cls = "";
-					if (
-						ln.startsWith("diff --git") ||
-						ln.startsWith("index ") ||
-						ln.startsWith("new file") ||
-						ln.startsWith("deleted file") ||
-						ln.startsWith("old mode") ||
-						ln.startsWith("new mode") ||
-						ln.startsWith("similarity index") ||
-						ln.startsWith("rename ") ||
-						ln.startsWith("copy ") ||
-						ln.startsWith("Binary files") ||
-						ln.startsWith("---") ||
-						ln.startsWith("+++")
-					) {
+					if (isDiffMetaLine(ln)) {
 						cls = "hdr";
 					} else if (ln.startsWith("@@")) {
 						cls = "hunk";
@@ -533,6 +1103,73 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 					);
 				})}
 			</pre>
+		);
+	};
+
+	const renderSideCell = (cell: SideCell, showNos: boolean, key: string | number) => {
+		if (cell.kind === "empty") {
+			return <div key={key} style={{ flex: 1, minWidth: 0 }} />;
+		}
+		const bg = cell.kind === "del" ? "var(--red-soft)" : cell.kind === "add" ? "var(--green-soft)" : "transparent";
+		const fg = cell.kind === "del" ? "var(--red)" : cell.kind === "add" ? "var(--green)" : "var(--text-dim)";
+		const sign = cell.kind === "del" ? "-" : cell.kind === "add" ? "+" : " ";
+		return (
+			<div
+				key={key}
+				style={{
+					flex: 1,
+					minWidth: 0,
+					display: "flex",
+					gap: 6,
+					padding: "0 6px",
+					borderRadius: 4,
+					background: bg,
+					color: fg,
+					fontFamily: "var(--mono)",
+					fontSize: "12.5px",
+					lineHeight: 1.55,
+				}}
+			>
+				{showNos && (
+					<span
+						style={{
+							flexShrink: 0,
+							width: 30,
+							textAlign: "right",
+							color: "var(--text-faint)",
+							userSelect: "none",
+						}}
+					>
+						{cell.no ?? ""}
+					</span>
+				)}
+				<span style={{ flex: 1, minWidth: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+					{`${sign}${cell.text}` || " "}
+				</span>
+			</div>
+		);
+	};
+
+	const renderSideBySide = (text: string, showNos: boolean) => {
+		const rows = buildSideRows(text);
+		return (
+			<div style={{ display: "flex", flexDirection: "column", gap: 2, paddingBottom: 8 }}>
+				{rows.map((row, i) => {
+					if (row.kind !== "pair") {
+						return (
+							<div key={i} className={`scm-diff-line ${row.kind === "hunk" ? "hunk" : "hdr"}`}>
+								{row.text || " "}
+							</div>
+						);
+					}
+					return (
+						<div key={i} style={{ display: "flex", gap: 8, padding: "0 14px" }}>
+							{renderSideCell(row.left, showNos, `l${i}`)}
+							{renderSideCell(row.right, showNos, `r${i}`)}
+						</div>
+					);
+				})}
+			</div>
 		);
 	};
 
@@ -785,6 +1422,189 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 					{renderMergedToolbar(scmZone(SCM_ROW_IDS, false), scmHostNodes, onUiAction)}
 				</div>
 
+				<div className="scm-row">
+					<span className="scm-files-count" title={t("scmStashListTip")}>
+						{t("scmStash")}
+					</span>
+					<button
+						type="button"
+						className="btn"
+						disabled={notRepo}
+						title={t("scmStashListTip")}
+						onClick={handleStashList}
+					>
+						{t("scmStashList")}
+					</button>
+					<button
+						type="button"
+						className="btn"
+						disabled={notRepo}
+						title={t("scmStashSaveTip")}
+						onClick={handleStashSave}
+					>
+						{t("scmStashSave")}
+					</button>
+					<label
+						style={{
+							display: "inline-flex",
+							alignItems: "center",
+							gap: 4,
+							fontSize: 12,
+							fontWeight: 400,
+							cursor: "pointer",
+						}}
+						title={t("scmStashUntrackedTip")}
+					>
+						<input
+							type="checkbox"
+							checked={stashUntracked}
+							onChange={(e) => setStashUntracked(e.target.checked)}
+							disabled={notRepo}
+						/>
+						{t("scmStashUntracked")}
+					</label>
+					<input
+						className="scm-commit-input"
+						value={stashRefInput}
+						placeholder={t("scmStashRefPlaceholder")}
+						title={t("scmStashRefLabel")}
+						disabled={notRepo}
+						style={{ flex: "0 1 auto", minWidth: 90, maxWidth: 130 }}
+						onChange={(e) => setStashRefInput(e.target.value)}
+					/>
+					<button type="button" className="btn" disabled={notRepo} title={t("scmStashPopTip")} onClick={handleStashPop}>
+						{t("scmStashPop")}
+					</button>
+					<button
+						type="button"
+						className="btn"
+						disabled={notRepo}
+						title={t("scmStashApplyTip")}
+						onClick={handleStashApply}
+					>
+						{t("scmStashApply")}
+					</button>
+					<button
+						type="button"
+						className="btn"
+						disabled={notRepo}
+						title={t("scmStashDropTip")}
+						onClick={handleStashDrop}
+					>
+						{t("scmStashDrop")}
+					</button>
+					{stashLoading && <span style={{ fontSize: 12, color: "var(--text-faint)" }}>{t("scmStashLoading")}</span>}
+				</div>
+
+				{stashList && stashList.length > 0 && (
+					<div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 120, overflowY: "auto" }}>
+						{stashList.map((entry) => (
+							<div key={entry.ref} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, minWidth: 0 }}>
+								<span
+									style={{
+										flexShrink: 0,
+										fontFamily: "var(--mono)",
+										color: "var(--accent)",
+										cursor: "pointer",
+									}}
+									title={entry.ref}
+									onClick={() => setStashRefInput(entry.ref)}
+								>
+									{entry.ref}
+								</span>
+								<span
+									style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+									title={entry.message}
+								>
+									{entry.message || "—"}
+								</span>
+								<button
+									type="button"
+									className="scm-act"
+									style={{ width: "auto", padding: "0 6px", fontSize: 11 }}
+									title={t("scmStashPopTip")}
+									onClick={() => handleStashPopWithRef(entry.ref)}
+								>
+									{t("scmStashPop")}
+								</button>
+								<button
+									type="button"
+									className="scm-act"
+									style={{ width: "auto", padding: "0 6px", fontSize: 11 }}
+									title={t("scmStashApplyTip")}
+									onClick={() => handleStashApplyWithRef(entry.ref)}
+								>
+									{t("scmStashApply")}
+								</button>
+								<button
+									type="button"
+									className="scm-act"
+									style={{ width: "auto", padding: "0 6px", fontSize: 11 }}
+									title={t("scmStashDropTip")}
+									onClick={() => handleStashDropWithRef(entry.ref)}
+								>
+									{t("scmStashDrop")}
+								</button>
+							</div>
+						))}
+					</div>
+				)}
+				{stashList && stashList.length === 0 && !stashLoading && (
+					<div style={{ fontSize: 12, color: "var(--text-faint)" }}>{t("scmStashEmpty")}</div>
+				)}
+
+				<div className="scm-row">
+					<button
+						type="button"
+						className="btn"
+						disabled={notRepo}
+						title={t("scmBranchNewTip")}
+						onClick={handleBranchCreate}
+					>
+						{t("scmBranchNew")}
+					</button>
+					<button
+						type="button"
+						className="btn"
+						disabled={notRepo || !branchSel}
+						title={t("scmBranchDeleteTip")}
+						onClick={handleBranchDelete}
+					>
+						{t("scmBranchDelete")}
+					</button>
+					<button
+						type="button"
+						className="btn"
+						disabled={notRepo || !branchSel}
+						title={t("scmBranchForceDeleteTip")}
+						onClick={handleBranchForceDelete}
+					>
+						{t("scmBranchForceDelete")}
+					</button>
+					<button
+						type="button"
+						className="btn"
+						disabled={notRepo || !status || status.detached}
+						title={t("scmBranchRenameTip")}
+						onClick={handleBranchRename}
+					>
+						{t("scmBranchRename")}
+					</button>
+					<button type="button" className="btn" disabled={notRepo} title={t("scmAmendTip")} onClick={handleAmend}>
+						{t("scmAmend")}
+					</button>
+					<button
+						type="button"
+						className="btn"
+						disabled={notRepo || !selected}
+						title={t("scmBlameTip")}
+						onClick={handleBlameToggle}
+						style={showBlame ? { background: "var(--accent-soft)", borderColor: "var(--accent)" } : {}}
+					>
+						{showBlame ? t("scmBlameHide") : t("scmBlameShow")}
+					</button>
+				</div>
+
 				{genError && (
 					<div className="scm-gen-error" role="alert" title={t("close")} onClick={() => setGenError(null)}>
 						{genError}
@@ -849,7 +1669,29 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 					<div className="scm-files">
 						<div className="scm-files-header">
 							<span>{t("scmChanges")}</span>
-							{status && status.files.length > 0 && <span className="scm-files-count">{status.files.length}</span>}
+							<span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+								{status && status.files.length > 0 && <span className="scm-files-count">{status.files.length}</span>}
+								<button
+									type="button"
+									className="scm-act"
+									style={{ width: "auto", padding: "0 6px", fontSize: "11px" }}
+									title={t("scmStageAllTip")}
+									disabled={notRepo || !status || !status.files.some((f) => fileKind(f) !== "staged")}
+									onClick={handleStageAll}
+								>
+									{t("scmStageAll")}
+								</button>
+								<button
+									type="button"
+									className="scm-act"
+									style={{ width: "auto", padding: "0 6px", fontSize: "11px" }}
+									title={t("scmUnstageAllTip")}
+									disabled={notRepo || !status || !status.files.some((f) => f.x !== " " && f.x !== "?")}
+									onClick={handleUnstageAll}
+								>
+									{t("scmUnstageAll")}
+								</button>
+							</span>
 						</div>
 						<div className="scm-files-list">
 							{notRepo ? (
@@ -909,6 +1751,21 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 														−
 													</button>
 												) : null}
+												<button
+													type="button"
+													className="scm-act"
+													title={
+														kind === "untracked"
+															? t("scmDiscardUntrackedTip", { path: f.path })
+															: t("scmDiscardTip", { path: f.path })
+													}
+													onClick={(e) => {
+														e.stopPropagation();
+														handleDiscard(f);
+													}}
+												>
+													×
+												</button>
 											</span>
 										</div>
 									);
@@ -929,7 +1786,7 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 
 				<div className="scm-diff">
 					<div className="scm-diff-header">
-						<span>
+						<span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
 							{viewMode === "history"
 								? selectedCommit
 									? `${selectedCommit.shortHash} ${selectedCommit.subject}`
@@ -941,6 +1798,119 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 						{(viewMode === "history" ? commitLoading : diffLoading) && (
 							<span className="scm-diff-loading">{t("scmLoading")}</span>
 						)}
+						{viewMode === "history"
+							? selectedCommit &&
+								!commitLoading &&
+								commitStats &&
+								(commitStats.add > 0 || commitStats.del > 0) && (
+									<span className="scm-file-stat" style={{ flexShrink: 0 }}>
+										{commitStats.add > 0 && <span className="add">+{commitStats.add}</span>}{" "}
+										{commitStats.del > 0 && <span className="del">-{commitStats.del}</span>}{" "}
+										{commitStats.hunks > 0 && <span>{t("scmDiffHunks", { n: commitStats.hunks })}</span>}
+									</span>
+								)
+							: selected &&
+								fileDiff &&
+								!fileDiff.untracked &&
+								(fileAdd > 0 || fileDel > 0 || fileHunks > 0) && (
+									<span className="scm-file-stat" style={{ flexShrink: 0 }}>
+										{fileAdd > 0 && <span className="add">+{fileAdd}</span>}{" "}
+										{fileDel > 0 && <span className="del">-{fileDel}</span>}{" "}
+										{fileHunks > 0 && <span>{t("scmDiffHunks", { n: fileHunks })}</span>}
+									</span>
+								)}
+						{viewMode !== "history" && selected && (
+							<span style={{ display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+								<button
+									type="button"
+									className="scm-act"
+									style={{ width: "auto", padding: "0 6px", fontSize: 11 }}
+									title={t("scmDiffPrevTip")}
+									aria-label={t("scmDiffPrev")}
+									disabled={!prevFile}
+									onClick={() => prevFile && showFileDiff(prevFile)}
+								>
+									↑
+								</button>
+								<button
+									type="button"
+									className="scm-act"
+									style={{ width: "auto", padding: "0 6px", fontSize: 11 }}
+									title={t("scmDiffNextTip")}
+									aria-label={t("scmDiffNext")}
+									disabled={!nextFile}
+									onClick={() => nextFile && showFileDiff(nextFile)}
+								>
+									↓
+								</button>
+							</span>
+						)}
+						<span style={{ display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+							<button
+								type="button"
+								className="scm-act"
+								style={{
+									width: "auto",
+									padding: "0 6px",
+									fontSize: 11,
+									...(effectiveDiffView === "inline"
+										? { background: "var(--accent-soft)", borderColor: "var(--accent)" }
+										: {}),
+								}}
+								title={t("scmDiffInlineTip")}
+								onClick={() => setDiffView("inline")}
+							>
+								{t("scmDiffInline")}
+							</button>
+							<button
+								type="button"
+								className="scm-act"
+								style={{
+									width: "auto",
+									padding: "0 6px",
+									fontSize: 11,
+									...(effectiveDiffView === "side"
+										? { background: "var(--accent-soft)", borderColor: "var(--accent)" }
+										: {}),
+								}}
+								title={t("scmDiffSideBySideTip")}
+								disabled={isNarrow}
+								onClick={() => setDiffView("side")}
+							>
+								{t("scmDiffSideBySide")}
+							</button>
+							{effectiveDiffView === "side" && (
+								<label
+									style={{
+										display: "inline-flex",
+										alignItems: "center",
+										gap: 4,
+										fontSize: 11,
+										fontWeight: 400,
+										cursor: "pointer",
+									}}
+								>
+									<input type="checkbox" checked={showLineNos} onChange={(e) => setShowLineNos(e.target.checked)} />
+									{t("scmDiffLineNumbers")}
+								</label>
+							)}
+							{viewMode !== "history" && selected && (
+								<button
+									type="button"
+									className="scm-act"
+									style={{
+										width: "auto",
+										padding: "0 6px",
+										fontSize: 11,
+										...(showBlame ? { background: "var(--accent-soft)", borderColor: "var(--accent)" } : {}),
+									}}
+									title={t("scmBlameTip")}
+									onClick={handleBlameToggle}
+								>
+									{showBlame ? t("scmBlameHide") : t("scmBlame")}
+								</button>
+							)}
+						</span>
 					</div>
 					<div className="scm-diff-body">
 						{viewMode === "history" ? (
@@ -948,7 +1918,7 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 								{error && <div className="scm-error">{error}</div>}
 								{!selectedCommit && !error && <div className="scm-empty">{t("scmSelectCommitHint")}</div>}
 								{selectedCommit && commitLoading && !error && <div className="scm-empty">{t("scmLoading")}</div>}
-								{selectedCommit && !commitLoading && !error && commitDetail ? renderDiff(commitDetail) : null}
+								{selectedCommit && !commitLoading && !error && commitDetail ? renderText(commitDetail) : null}
 							</>
 						) : (
 							<>
@@ -958,16 +1928,80 @@ export function ScmPanel({ chat, terminal, active, onSwitchToTerminal, uiScmTool
 								{selected && fileDiff && fileDiff.untracked && <div className="scm-empty">{t("scmUntrackedNote")}</div>}
 								{selected && fileDiff && !fileDiff.untracked && (
 									<>
+										{showBlame && (
+											<>
+												<div className="scm-diff-section">
+													{t("scmBlame")}
+													{blameLoading && (
+														<span style={{ marginLeft: 8, fontWeight: 400 }}>· {t("scmBlameLoading")}</span>
+													)}
+												</div>
+												{blameLoading && !blameLines && <div className="scm-empty">{t("scmBlameLoading")}</div>}
+												{!blameLoading && blameError && <div className="scm-error">{blameError}</div>}
+												{!blameLoading && !blameError && (!blameLines || blameLines.length === 0) && (
+													<div className="scm-empty">{t("scmBlameEmpty")}</div>
+												)}
+												{!blameError && blameLines && blameLines.length > 0 && (
+													<pre className="scm-diff-pre" style={{ maxHeight: 260, overflowY: "auto" }}>
+														{blameLines.map((bl) => (
+															<div
+																key={bl.lineNo}
+																className="scm-diff-line"
+																style={{ display: "flex", gap: 8 }}
+																title={`${bl.hash} · ${bl.author} · ${bl.date}`}
+															>
+																<span
+																	style={{
+																		flexShrink: 0,
+																		width: 36,
+																		textAlign: "right",
+																		color: "var(--text-faint)",
+																		userSelect: "none",
+																	}}
+																>
+																	{bl.lineNo}
+																</span>
+																<span
+																	style={{
+																		flexShrink: 0,
+																		width: 62,
+																		fontFamily: "var(--mono)",
+																		color: "var(--accent)",
+																	}}
+																>
+																	{bl.shortHash}
+																</span>
+																<span
+																	style={{
+																		flexShrink: 0,
+																		maxWidth: 120,
+																		overflow: "hidden",
+																		textOverflow: "ellipsis",
+																		whiteSpace: "nowrap",
+																	}}
+																>
+																	{bl.author}
+																</span>
+																<span style={{ flexShrink: 0, color: "var(--text-faint)" }}>{bl.date}</span>
+																<span style={{ flex: 1, minWidth: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+																	{bl.content || " "}
+																</span>
+															</div>
+														))}
+													</pre>
+												)}
+											</>
+										)}
 										{fileDiff.staged && (
 											<>
 												<div className="scm-diff-section">{t("scmStaged")}</div>
-												{renderDiff(fileDiff.staged)}
+												{renderText(fileDiff.staged)}
 											</>
 										)}
 										{fileDiff.worktree && (
 											<>
 												<div className="scm-diff-section">{t("scmUnstaged")}</div>
-												{renderDiff(fileDiff.worktree)}
+												{renderText(fileDiff.worktree)}
 											</>
 										)}
 										{!fileDiff.staged && !fileDiff.worktree && <div className="scm-empty">{t("scmNoDiff")}</div>}

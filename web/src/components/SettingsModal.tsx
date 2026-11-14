@@ -101,6 +101,8 @@ import {
 } from "../prompt-history";
 import { randomUuid } from "../uuid";
 import { QuickAskSettings, type QuickAskPatch } from "./QuickAskSettings";
+import ExtensionInventory from "./ExtensionInventory";
+import type { UiExtensionInventoryEntry } from "../types";
 import { SubagentTemplateWizard } from "./SubagentTemplateWizard";
 import { formatTokenDraft, parseTokenInput } from "../token-input";
 import { useWideChat, saveChatWidthSettings, useHideModelRow, saveHideModelRowSettings } from "../chat-width-settings";
@@ -157,7 +159,11 @@ import {
 	DEFAULT_PROMPT_DISABLED,
 	PROMPT_TOKENS,
 	estimatePromptTokens,
+	collectTemplateTokens,
+	effectiveTemplate,
 	isReadonlyPromptSource,
+	isLegacyPromptToken,
+	overrideOf,
 } from "../../../server/prompt-composer.js";
 import { isWindowsPlatform } from "../notify";
 import { AGENT_TOOL_CATALOG, filterToolsByPreset, presetShowsSkillCatalog } from "../../../server/tool-manager.js";
@@ -1253,7 +1259,15 @@ function LoadedSettingsModal({
 			: [{ id: "review" as const, icon: <FiZap />, label: t("settingsReview"), count: settings.reviewSkills.length }]),
 		...(isPi ? [{ id: "vision" as const, icon: <FiEye />, label: t("settingsVisionBridge") }] : []),
 		...(isPi
-			? [{ id: "presets" as const, icon: <FiSliders />, label: t("settingsPresets"), count: settings.presets.length }]
+			? [
+					{
+						id: "presets" as const,
+						icon: <FiSliders />,
+						label: t("settingsPresets"),
+						// 提示词模板（scope:"prompt"）展示在「系统提示词」页的模板库里，不占预设计数
+						count: settings.presets.filter((p) => p.scope !== "prompt").length || undefined,
+					},
+				]
 			: []),
 		...(isDsh
 			? [
@@ -1582,6 +1596,124 @@ function LoadedSettingsModal({
 		if (next.has(e.id)) next.delete(e.id);
 		else next.add(e.id);
 		setPartial({ disabledExtensions: [...next] });
+	};
+
+	// #885 统一清单：服务端 inventory 优先（extension_inventory_data，含健康），缺席时用本地快照兜底聚合。
+	// 自动刷新：extension_inventory_changed（mcp.json 监听 + broadcastMcpServers）触发重拉，前端防抖由服务端 600ms 承担。
+	const inventoryDirty = (chat as { extensionInventoryDirty?: number }).extensionInventoryDirty ?? 0;
+	const inventoryEntries: UiExtensionInventoryEntry[] = useMemo(() => {
+		const server = (chat as { extensionInventory?: UiExtensionInventoryEntry[] | null }).extensionInventory;
+		if (Array.isArray(server) && server.length > 0) return server;
+		const out: UiExtensionInventoryEntry[] = [];
+		for (const e of settings.extensions ?? []) {
+			out.push({
+				name: e.id,
+				source: "cli",
+				enabled: e.enabled,
+				description: e.path
+					? `CLI 扩展（随 agentDir 继承） ${e.path} / CLI extension (inherited via agentDir) ${e.path}`
+					: "CLI 扩展（随 agentDir 继承） / CLI extension (inherited via agentDir)",
+			});
+		}
+		for (const p of chat.plugins ?? []) {
+			out.push({
+				name: p.id,
+				source: "webui",
+				enabled: !(settings.disabledPlugins ?? []).includes(p.id),
+				version: p.version,
+				description: p.description?.trim()
+					? p.description.trim()
+					: "WebUI 专属插件（可写） / WebUI-specific plugin (writable)",
+				...(p.error?.trim() ? { error: p.error.trim() } : {}),
+			});
+		}
+		for (const s of settings.mcpServers ?? []) {
+			const err =
+				typeof (s as { error?: unknown }).error === "string" && ((s as { error?: string }).error ?? "").trim()
+					? ((s as { error?: string }).error ?? "").trim()
+					: undefined;
+			const status =
+				typeof (s as { status?: unknown }).status === "string" ? ((s as { status?: string }).status ?? "") : "";
+			const health = err
+				? ("error" as const)
+				: s.enabled === false
+					? ("stopped" as const)
+					: status === "running"
+						? ("online" as const)
+						: status === "error"
+							? ("error" as const)
+							: status === "stopped"
+								? ("offline" as const)
+								: undefined;
+			const tools = Array.isArray((s as { tools?: unknown }).tools)
+				? ((s as { tools?: unknown[] }).tools ?? [])
+				: undefined;
+			out.push({
+				name: `mcp:${s.scope}:${s.name}`,
+				source: "external",
+				enabled: s.enabled !== false,
+				description:
+					typeof (s as { description?: unknown }).description === "string" &&
+					((s as { description?: string }).description ?? "").trim()
+						? ((s as { description?: string }).description ?? "").trim()
+						: `MCP 服务器（${s.scope}，随 agentDir/cwd 继承） / MCP server (${s.scope}, inherited via agentDir/cwd)`,
+				...(err ? { error: err } : {}),
+				...(health ? { health } : {}),
+				...(typeof tools?.length === "number" ? { toolCount: tools.length } : {}),
+			});
+		}
+		out.sort((a, b) => a.source.localeCompare(b.source) || a.name.localeCompare(b.name));
+		return out;
+	}, [chat, settings]);
+
+	useEffect(() => {
+		if (tab === "extensions") {
+			try {
+				appSend({ type: "extension_inventory", reqId: Date.now() % 1_000_000_000 } as never);
+			} catch {}
+		}
+	}, [tab]);
+
+	useEffect(() => {
+		if (tab !== "extensions" || inventoryDirty === 0) return;
+		try {
+			appSend({ type: "extension_inventory", reqId: Date.now() % 1_000_000_000 } as never);
+		} catch {}
+	}, [tab, inventoryDirty]);
+
+	const toggleInventoryCli = (entry: UiExtensionInventoryEntry) => {
+		if (entry.switchable === false) return;
+		const next = new Set(disabledExts);
+		if (next.has(entry.name)) next.delete(entry.name);
+		else next.add(entry.name);
+		setPartial({ disabledExtensions: [...next] });
+	};
+	const toggleInventoryWebui = (entry: UiExtensionInventoryEntry) => {
+		const next = new Set(disabledPlugins);
+		if (next.has(entry.name)) next.delete(entry.name);
+		else next.add(entry.name);
+		setPartial({ disabledPlugins: [...next] });
+	};
+	const toggleInventoryExternal = (entry: UiExtensionInventoryEntry) => {
+		const m = /^mcp:(global|project):(.+)$/.exec(entry.name);
+		if (!m) return;
+		const scope = m[1] as "global" | "project";
+		const base = m[2];
+		appSend({ type: "toggle_mcp_server", name: base, scope, enabled: !entry.enabled } as never);
+	};
+	const refreshInventoryAll = () => {
+		try {
+			appSend({ type: "extensions_reload" } as never);
+		} catch {}
+		try {
+			appSend({ type: "plugins_reload" } as never);
+		} catch {}
+		try {
+			appSend({ type: "reload_mcp" } as never);
+		} catch {}
+		try {
+			appSend({ type: "extension_inventory", reqId: Date.now() % 1_000_000_000 } as never);
+		} catch {}
 	};
 
 	const onDemandTools = settings.toolOnDemandTools ?? [];
@@ -1975,22 +2107,6 @@ function LoadedSettingsModal({
 	/** 服务端已确认的模板值（未回执前不得被服务端快照覆盖） */
 	const templateSentRef = useRef<string | null>(null);
 
-	const commitTemplate = () => {
-		if (templateDebounceTimer.current) {
-			clearTimeout(templateDebounceTimer.current);
-			templateDebounceTimer.current = null;
-		}
-		const cur = promptTemplateDraftRef.current;
-		if (cur === (serverSettings?.promptTemplate ?? "")) {
-			// 与服务端已一致：不需要发送，也不需要占用草稿
-			templateDirtyRef.current = false;
-			return;
-		}
-		templateDirtyRef.current = true;
-		templateSentRef.current = cur;
-		setPartial({ promptTemplate: cur });
-	};
-
 	const clearOverrideTimer = (token: string) => {
 		const timer = overrideCommitTimers.current.get(token);
 		if (timer) {
@@ -2080,18 +2196,111 @@ function LoadedSettingsModal({
 		});
 	};
 
-	const appendTokenToTemplate = (token: string) => {
+	/* ── 拼装来源（开关式组合模板）：开关/排序都落到 promptTemplate / promptDisabled ──
+	 * 模板为空 = 默认模板（自然拼装顺序，零开销）；此时开关走 promptDisabled。
+	 * 首次调整顺序或自定义模板下编辑开关 → 序列化成 "{{a}}\n\n{{b}}" 形式（等同默认串时归零回 ""）。
+	 */
+	const templateCustom = useMemo(() => {
+		const raw = promptTemplateDraft.trim();
+		if (!raw || raw === DEFAULT_PROMPT_TEMPLATE) return null;
+		const all = collectTemplateTokens(raw);
+		const toks = all.filter((tk) => (PROMPT_TOKENS as readonly string[]).includes(tk) && !isLegacyPromptToken(tk));
+		const rest = raw.replace(/\{\{\s*[\w]+\s*\}\}/g, " ").trim();
+		const unknown = all.some((tk) => !(PROMPT_TOKENS as readonly string[]).includes(tk) || isLegacyPromptToken(tk));
+		return { toks, hasExtras: rest.length > 0 || unknown };
+	}, [promptTemplateDraft]);
+
+	const assemblyRows: readonly string[] = templateCustom ? templateCustom.toks : PROMPT_TOKENS;
+	const sourceEnabled = (tk: string) =>
+		templateCustom ? templateCustom.toks.includes(tk) : !(settings.promptDisabled ?? []).includes(tk);
+	const offSourceChips = templateCustom ? PROMPT_TOKENS.filter((tk) => !templateCustom.toks.includes(tk)) : [];
+
+	const setTemplateValue = (nextRaw: string) => {
 		if (templateDebounceTimer.current) {
 			clearTimeout(templateDebounceTimer.current);
 			templateDebounceTimer.current = null;
 		}
-		const cur = promptTemplateDraftRef.current;
-		const next = cur.trim() ? `${cur}\n\n{{${token}}}` : `{{${token}}}`;
+		// 恰为默认模板串时归零：空模板走 SDK 默认分支（零开销），也避免面板把默认串当成「已自定义」
+		const next = nextRaw === DEFAULT_PROMPT_TEMPLATE ? "" : nextRaw;
 		setPromptTemplateDraft(next);
 		promptTemplateDraftRef.current = next;
+		if (next === (serverSettings?.promptTemplate ?? "")) {
+			templateDirtyRef.current = false;
+			return;
+		}
 		templateDirtyRef.current = true;
 		templateSentRef.current = next;
 		setPartial({ promptTemplate: next });
+	};
+
+	const toggleSource = (tk: string, on: boolean) => {
+		if (templateCustom) {
+			const toks = templateCustom.toks.filter((x) => x !== tk);
+			if (on) toks.push(tk);
+			setTemplateValue(toks.map((k) => `{{${k}}}`).join("\n\n"));
+			return;
+		}
+		const cur = new Set(settings.promptDisabled ?? []);
+		if (on) cur.delete(tk);
+		else cur.add(tk);
+		setPartial({ promptDisabled: [...cur] });
+	};
+
+	const moveSource = (idx: number, dir: 1 | -1) => {
+		const j = idx + dir;
+		if (j < 0 || j >= assemblyRows.length) return;
+		const list = [...assemblyRows];
+		[list[idx], list[j]] = [list[j], list[idx]];
+		if (templateCustom) {
+			setTemplateValue(list.map((k) => `{{${k}}}`).join("\n\n"));
+			return;
+		}
+		// 默认模板下的首次排序：物化为自定义模板（默认停用段不进模板；promptDisabled 保持不动）
+		const dis = new Set(settings.promptDisabled ?? []);
+		setTemplateValue(
+			list
+				.filter((k) => !dis.has(k))
+				.map((k) => `{{${k}}}`)
+				.join("\n\n"),
+		);
+	};
+
+	/* ── 提示词模板库 = 只捕获 prompt 字段组的预设（scope:"prompt"）──
+	 * 切换 = apply_preset（只回写 prompt 组字段）；删除/分享复用预设通道。
+	 */
+	const promptTemplates = useMemo(() => settings.presets.filter((p) => p.scope === "prompt"), [settings.presets]);
+
+	const templateActive = (p: (typeof settings.presets)[number]) => {
+		if (effectiveTemplate(p.promptTemplate) !== effectiveTemplate(serverSettings?.promptTemplate)) return false;
+		const normOv = (m: Record<string, string> | undefined) =>
+			Object.entries(m ?? {})
+				.filter(([, v]) => v.trim())
+				.map(([k, v]) => `${k}=${v.trim()}`)
+				.sort()
+				.join("|");
+		if (normOv(p.promptOverrides) !== normOv(serverSettings?.promptOverrides)) return false;
+		const normList = (l: string[] | undefined) => [...(l ?? [])].sort().join("|");
+		return normList(p.promptDisabled) === normList(serverSettings?.promptDisabled);
+	};
+
+	const templateMeta = (p: (typeof settings.presets)[number]) => {
+		const toks = collectTemplateTokens(effectiveTemplate(p.promptTemplate));
+		const est = toks.reduce(
+			(n, tk) =>
+				n + estimatePromptTokens(overrideOf(p.promptOverrides, tk) || settings.promptSourceDefaults?.[tk] || ""),
+			0,
+		);
+		const ovs = Object.values(p.promptOverrides ?? {}).filter((v) => v.trim()).length;
+		const off = (p.promptDisabled ?? []).length;
+		return `≈${est.toLocaleString()} · ${t("promptTemplateMetaOv", { n: ovs })}${off ? ` · ${t("promptTemplateMetaOff", { n: off })}` : ""}`;
+	};
+
+	const [promptTemplateName, setPromptTemplateName] = useState("");
+	const savePromptTemplate = () => {
+		const n = promptTemplateName.trim();
+		if (!n) return;
+		appSend({ type: "save_preset", name: n, groups: ["prompt"] });
+		setPromptTemplateName("");
 	};
 
 	const flushAllDrafts = () => {
@@ -2680,48 +2889,151 @@ function LoadedSettingsModal({
 								)}
 								{!isDsh ? (
 									<>
-										<div className="set-field">
-											<label className="set-field-label">{t("promptTemplateLabel")}</label>
-											<textarea
-												className="set-prompt-input"
-												rows={4}
-												spellCheck={false}
-												placeholder={DEFAULT_PROMPT_TEMPLATE}
-												value={promptTemplateDraft}
-												onFocus={() => (templateFocus.current = true)}
-												onBlur={() => {
-													templateFocus.current = false;
-													commitTemplate();
-												}}
-												onChange={(e) => {
-													const val = e.target.value;
-													templateDirtyRef.current = true;
-													setPromptTemplateDraft(val);
-													promptTemplateDraftRef.current = val;
-													if (templateDebounceTimer.current) clearTimeout(templateDebounceTimer.current);
-													templateDebounceTimer.current = setTimeout(() => {
-														templateDebounceTimer.current = null;
-														templateSentRef.current = val;
-														if (val !== (serverSettings?.promptTemplate ?? "")) {
-															setPartial({ promptTemplate: val });
-														}
-													}, 800);
-												}}
-											/>
-											<div className="compose-toolbar">
-												<span className="set-field-label set-muted">{t("promptInsertTokens")}</span>
-												{orderedPromptTokens.map((tk) => (
-													<button
-														key={tk}
-														type="button"
-														className="token-chip"
-														title={tt(`promptTok_${tk}_desc`)}
-														onClick={() => appendTokenToTemplate(tk)}
-													>
-														{`{{${tk}}}`}
-													</button>
-												))}
+										<div className="set-field prompt-templates">
+											<div className="prompt-templates-head">
+												<label className="set-field-label">{t("promptTemplateLibLabel")}</label>
+												<HintTip text={t("promptTemplateLibHint")} />
+												<span className="set-count">{promptTemplates.length}</span>
+												<button
+													type="button"
+													className="set-btn-mini"
+													onClick={() => setPresetShareFor({ name: "", tab: "import" })}
+												>
+													{t("presetShareImportBtn")}
+												</button>
 											</div>
+											{promptTemplates.length === 0 ? (
+												<p className="set-hint">{t("promptTemplateEmpty")}</p>
+											) : (
+												<div className="prompt-template-list">
+													{promptTemplates.map((p) => {
+														const active = templateActive(p);
+														return (
+															<div className={`prompt-template-row${active ? " active" : ""}`} key={p.name}>
+																<span className="prompt-template-name">{p.name}</span>
+																{active && <span className="prompt-template-badge">{t("promptTemplateActive")}</span>}
+																<span className="set-muted prompt-template-meta">{templateMeta(p)}</span>
+																<span className="prompt-template-actions">
+																	{!active && (
+																		<button
+																			type="button"
+																			className="set-btn-mini"
+																			onClick={() => appSend({ type: "apply_preset", name: p.name })}
+																		>
+																			{t("promptTemplateApply")}
+																		</button>
+																	)}
+																	<button
+																		type="button"
+																		className="set-icon-btn"
+																		title={t("presetShare")}
+																		onClick={() => setPresetShareFor({ name: p.name, tab: "export" })}
+																	>
+																		<FiShare2 />
+																	</button>
+																	<button
+																		type="button"
+																		className="set-icon-btn danger"
+																		title={t("deletePreset")}
+																		onClick={() => appSend({ type: "delete_preset", name: p.name })}
+																	>
+																		<FiTrash2 />
+																	</button>
+																</span>
+															</div>
+														);
+													})}
+												</div>
+											)}
+											<div className="set-preset-save">
+												<input
+													className="set-input"
+													placeholder={t("promptTemplateSaveNamePh")}
+													value={promptTemplateName}
+													onChange={(e) => setPromptTemplateName(e.target.value)}
+													onKeyDown={(e) => {
+														if (e.key === "Enter") savePromptTemplate();
+													}}
+												/>
+												<button
+													type="button"
+													className="set-save-btn"
+													disabled={!promptTemplateName.trim()}
+													onClick={savePromptTemplate}
+												>
+													<FiPlus /> {t("promptTemplateSaveBtn")}
+												</button>
+											</div>
+										</div>
+										<div className="set-field prompt-assembly">
+											<div className="prompt-assembly-head">
+												<label className="set-field-label">{t("promptAssemblyLabel")}</label>
+												<HintTip text={t("promptAssemblyHint")} />
+												<span className="set-muted prompt-assembly-count">
+													{assemblyRows.filter((tk) => sourceEnabled(tk)).length}/{PROMPT_TOKENS.length}
+												</span>
+											</div>
+											{templateCustom?.hasExtras && (
+												<p className="prompt-assembly-warn">{t("promptAssemblyLegacyWarn")}</p>
+											)}
+											<div className="prompt-assembly-list">
+												{assemblyRows.map((tk, idx) => {
+													const on = sourceEnabled(tk);
+													return (
+														<div className={`prompt-assembly-row${on ? "" : " off"}`} key={tk}>
+															<button
+																type="button"
+																role="switch"
+																aria-checked={on}
+																className={`set-switch${on ? " on" : ""}`}
+																title={t("promptToggleEnabled")}
+																onClick={() => toggleSource(tk, !on)}
+															>
+																<span className="set-switch-knob" />
+															</button>
+															<span className="override-token">{`{{${tk}}}`}</span>
+															<span className="prompt-assembly-name">{tt(`promptTok_${tk}`)}</span>
+															<span className="prompt-assembly-desc">{tt(`promptTok_${tk}_desc`)}</span>
+															<span className="prompt-assembly-move">
+																<button
+																	type="button"
+																	className="set-btn-mini"
+																	disabled={idx === 0}
+																	title={t("promptMoveUp")}
+																	onClick={() => moveSource(idx, -1)}
+																>
+																	↑
+																</button>
+																<button
+																	type="button"
+																	className="set-btn-mini"
+																	disabled={idx === assemblyRows.length - 1}
+																	title={t("promptMoveDown")}
+																	onClick={() => moveSource(idx, 1)}
+																>
+																	↓
+																</button>
+															</span>
+														</div>
+													);
+												})}
+											</div>
+											{offSourceChips.length > 0 && (
+												<div className="compose-toolbar">
+													<span className="set-field-label set-muted">{t("promptAssemblyOff")}</span>
+													{offSourceChips.map((tk) => (
+														<button
+															key={tk}
+															type="button"
+															className="token-chip"
+															title={t("promptAssemblyAddHint")}
+															onClick={() => toggleSource(tk, true)}
+														>
+															{`{{${tk}}}`}
+														</button>
+													))}
+												</div>
+											)}
 										</div>
 										<div className="set-field">
 											<label className="set-field-label">{t("promptSourcesLabel")}</label>
@@ -2730,27 +3042,13 @@ function LoadedSettingsModal({
 												const def = settings.promptSourceDefaults?.[tk] ?? "";
 												const editing = editingSource === tk;
 												const isLong = def.split("\n").length > 6 || def.length > 480;
-												const tkDisabled = (settings.promptDisabled ?? []).includes(tk);
-												const tkEffTokens = tkDisabled ? 0 : estimatePromptTokens(v.trim() ? v : def);
+												const tkOff = !sourceEnabled(tk);
+												const tkEffTokens = tkOff ? 0 : estimatePromptTokens(v.trim() ? v : def);
 												if (isReadonlyPromptSource(tk)) {
 													const shown = v.trim() ? v : def;
 													return (
-														<div className="override-row readonly" key={tk}>
+														<div className={`override-row readonly${tkOff ? " src-off" : ""}`} key={tk}>
 															<div className="override-row-head">
-																<label className="set-check">
-																	<input
-																		type="checkbox"
-																		checked={!(settings.promptDisabled ?? []).includes(tk)}
-																		title={t("promptToggleEnabled")}
-																		onChange={(e) => {
-																			const cur = new Set(settings.promptDisabled ?? []);
-																			if (e.target.checked) cur.delete(tk);
-																			else cur.add(tk);
-																			setPartial({ promptDisabled: [...cur] });
-																		}}
-																	/>
-																	{t("promptToggleEnabled")}
-																</label>
 																{`{{${tk}}}`}
 																<span className="set-muted">
 																	{tt(`promptTok_${tk}`)} <HintTip text={tt(`promptTok_${tk}_desc`)} /> · ≈
@@ -2811,22 +3109,8 @@ function LoadedSettingsModal({
 													);
 												}
 												return (
-													<div className="override-row" key={tk}>
+													<div className={`override-row${tkOff ? " src-off" : ""}`} key={tk}>
 														<div className="override-row-head">
-															<label className="set-check">
-																<input
-																	type="checkbox"
-																	checked={!(settings.promptDisabled ?? []).includes(tk)}
-																	title={t("promptToggleEnabled")}
-																	onChange={(e) => {
-																		const cur = new Set(settings.promptDisabled ?? []);
-																		if (e.target.checked) cur.delete(tk);
-																		else cur.add(tk);
-																		setPartial({ promptDisabled: [...cur] });
-																	}}
-																/>
-																{t("promptToggleEnabled")}
-															</label>
 															{`{{${tk}}}`}
 															<span className="set-muted">
 																{tt(`promptTok_${tk}`)} <HintTip text={tt(`promptTok_${tk}_desc`)} /> · ≈
@@ -5464,55 +5748,64 @@ function LoadedSettingsModal({
 						)}
 
 						{tab === "extensions" && !isDsh && (
-							<div className="set-section">
-								<div className="set-section-title">
-									<FiPackage className="set-section-icon" />
-									{t("settingsExtensions")}
-									<span className="set-count">{settings.extensions.length}</span>
-								</div>
-								{settings.extensions.length === 0 ? (
-									<p className="set-empty">{t("noExtensions")}</p>
-								) : (
-									<div className="set-list">
-										{settings.extensions.map((e) => {
-											const pkgName = e.id.startsWith("npm:") ? e.id.slice(4) : null;
-											return (
-												<ToggleRow
-													key={e.id}
-													title={e.name}
-													subtitle={e.path}
-													enabled={e.enabled}
-													onToggle={() => toggleExtension(e)}
-													action={
-														pkgName ? (
-															confirmUninstall === e.id ? (
-																<button
-																	type="button"
-																	className="set-uninstall confirm"
-																	title={t("uninstallConfirmHint")}
-																	onClick={() => runUninstall(pkgName)}
-																>
-																	{t("uninstallConfirm")}
-																</button>
-															) : (
-																<button
-																	type="button"
-																	className="set-uninstall"
-																	title={t("uninstallHint")}
-																	onClick={() => setConfirmUninstall(e.id)}
-																>
-																	<FiTrash2 />
-																	{t("uninstallExt")}
-																</button>
-															)
-														) : undefined
-													}
-												/>
-											);
-										})}
+							<>
+								<ExtensionInventory
+									entries={inventoryEntries}
+									onToggleCli={toggleInventoryCli}
+									onToggleWebui={toggleInventoryWebui}
+									onToggleExternal={toggleInventoryExternal}
+									onRefreshAll={refreshInventoryAll}
+								/>
+								<div className="set-section">
+									<div className="set-section-title">
+										<FiPackage className="set-section-icon" />
+										{t("settingsExtensions")}
+										<span className="set-count">{settings.extensions.length}</span>
 									</div>
-								)}
-							</div>
+									{settings.extensions.length === 0 ? (
+										<p className="set-empty">{t("noExtensions")}</p>
+									) : (
+										<div className="set-list">
+											{settings.extensions.map((e) => {
+												const pkgName = e.id.startsWith("npm:") ? e.id.slice(4) : null;
+												return (
+													<ToggleRow
+														key={e.id}
+														title={e.name}
+														subtitle={e.path}
+														enabled={e.enabled}
+														onToggle={() => toggleExtension(e)}
+														action={
+															pkgName ? (
+																confirmUninstall === e.id ? (
+																	<button
+																		type="button"
+																		className="set-uninstall confirm"
+																		title={t("uninstallConfirmHint")}
+																		onClick={() => runUninstall(pkgName)}
+																	>
+																		{t("uninstallConfirm")}
+																	</button>
+																) : (
+																	<button
+																		type="button"
+																		className="set-uninstall"
+																		title={t("uninstallHint")}
+																		onClick={() => setConfirmUninstall(e.id)}
+																	>
+																		<FiTrash2 />
+																		{t("uninstallExt")}
+																	</button>
+																)
+															) : undefined
+														}
+													/>
+												);
+											})}
+										</div>
+									)}
+								</div>
+							</>
 						)}
 
 						{tab === "layout" && (
@@ -6906,14 +7199,19 @@ function LoadedSettingsModal({
 								<div className="set-section-title">
 									<FiSliders className="set-section-icon" />
 									{t("settingsPresets")}
-									<span className="set-count">{settings.presets.length}</span>
+									<span className="set-count">{settings.presets.filter((p) => p.scope !== "prompt").length}</span>
 								</div>
 								<div className="set-preset-share-actions">
 									<button
 										type="button"
 										className="set-preset-share-btn primary"
 										title={t("presetShareShareBtn")}
-										onClick={() => setPresetShareFor({ name: settings.presets[0]?.name ?? "", tab: "export" })}
+										onClick={() =>
+											setPresetShareFor({
+												name: settings.presets.find((p) => p.scope !== "prompt")?.name ?? "",
+												tab: "export",
+											})
+										}
 									>
 										<FiShare2 />
 										{t("presetShareShareBtn")}
@@ -6962,48 +7260,50 @@ function LoadedSettingsModal({
 										<FiPlus /> {t("saveAsPreset")}
 									</button>
 								</div>
-								{settings.presets.length === 0 ? (
+								{settings.presets.filter((p) => p.scope !== "prompt").length === 0 ? (
 									<p className="set-empty">{t("noPresets")}</p>
 								) : (
 									<div className="set-list">
-										{settings.presets.map((p) => (
-											<div className="set-row" key={p.name}>
-												<div className="set-row-info">
-													<div className="set-row-name">{p.name}</div>
-													<div className="set-row-desc">
-														{p.promptMode === "replace" ? t("promptModeReplace") : t("promptModeAppend")}
-														{p.disabledSkills.length > 0 && ` · ${t("settingsSkills")} ${p.disabledSkills.length}`}
-														{p.disabledExtensions.length > 0 &&
-															` · ${t("settingsExtensions")} ${p.disabledExtensions.length}`}
+										{settings.presets
+											.filter((p) => p.scope !== "prompt")
+											.map((p) => (
+												<div className="set-row" key={p.name}>
+													<div className="set-row-info">
+														<div className="set-row-name">{p.name}</div>
+														<div className="set-row-desc">
+															{p.promptMode === "replace" ? t("promptModeReplace") : t("promptModeAppend")}
+															{p.disabledSkills.length > 0 && ` · ${t("settingsSkills")} ${p.disabledSkills.length}`}
+															{p.disabledExtensions.length > 0 &&
+																` · ${t("settingsExtensions")} ${p.disabledExtensions.length}`}
+														</div>
+													</div>
+													<div className="set-row-actions">
+														<button
+															type="button"
+															className="set-icon-btn"
+															title={t("presetShare")}
+															onClick={() => setPresetShareFor({ name: p.name, tab: "export" })}
+														>
+															<FiShare2 />
+														</button>
+														<button
+															type="button"
+															className="set-uninstall"
+															onClick={() => appSend({ type: "apply_preset", name: p.name })}
+														>
+															{t("applyPreset")}
+														</button>
+														<button
+															type="button"
+															className="set-icon-btn danger"
+															title={t("deletePreset")}
+															onClick={() => appSend({ type: "delete_preset", name: p.name })}
+														>
+															<FiTrash2 />
+														</button>
 													</div>
 												</div>
-												<div className="set-row-actions">
-													<button
-														type="button"
-														className="set-icon-btn"
-														title={t("presetShare")}
-														onClick={() => setPresetShareFor({ name: p.name, tab: "export" })}
-													>
-														<FiShare2 />
-													</button>
-													<button
-														type="button"
-														className="set-uninstall"
-														onClick={() => appSend({ type: "apply_preset", name: p.name })}
-													>
-														{t("applyPreset")}
-													</button>
-													<button
-														type="button"
-														className="set-icon-btn danger"
-														title={t("deletePreset")}
-														onClick={() => appSend({ type: "delete_preset", name: p.name })}
-													>
-														<FiTrash2 />
-													</button>
-												</div>
-											</div>
-										))}
+											))}
 									</div>
 								)}
 							</div>
