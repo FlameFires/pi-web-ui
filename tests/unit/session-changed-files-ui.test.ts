@@ -78,3 +78,29 @@ it("closes with Escape and restores focus to the entry", () => {
 	expect(document.querySelector(".session-files-panel")).toBeNull();
 	expect(document.activeElement).toBe(container.querySelector("button"));
 });
+
+it("shows deleted file as historical-only and hides current preview action", () => {
+	const removed: UiState["messages"] = [
+		...messages,
+		{
+			id: "a2",
+			role: "assistant",
+			content: [
+				{ type: "toolCall", id: "t2", name: "bash", argumentsText: JSON.stringify({ command: "rm docs/a.md" }) },
+			],
+		},
+		{
+			id: "r2",
+			role: "toolResult",
+			toolCallId: "t2",
+			toolName: "bash",
+			details: { exitCode: 0 },
+			content: [{ type: "text", text: "removed" }],
+		},
+	];
+	render("one", 0, removed);
+	click(".session-files-trigger");
+	click("summary");
+	expect(document.querySelector(".session-files-state")?.textContent).toContain("Deleted");
+	expect(document.querySelector(".session-files-detail > button")).toBeNull();
+});

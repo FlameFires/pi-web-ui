@@ -3398,6 +3398,7 @@ export type ServerMessage =
 			binary: boolean;
 			lines: number;
 			size: number;
+			error?: string;
 			slides?: PptxSlidePayload[];
 	  }
 	| {

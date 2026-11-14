@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { UiMessage } from "../../web/src/types";
 import { collectSessionChangedFiles } from "../../web/src/session-changed-files";
+import { samePreviewPath } from "../../web/src/file-preview-path";
 
 function mutation(id: string, name: string, args: unknown, details?: unknown, isError = false): UiMessage[] {
 	return [
@@ -67,12 +68,62 @@ describe("session changed files", () => {
 			),
 			"/repo",
 		);
-		expect(files.map((f) => [f.path, f.deleted])).toEqual([
-			["a", false],
-			["gone", true],
-			["new", false],
-			["old", true],
+		expect(files.map((f) => [f.path, f.status])).toEqual([
+			["a", "present"],
+			["gone", "deleted"],
+			["new", "present"],
+			["old", "moved"],
 		]);
+	});
+	it("marks a file created and later removed by successful rm as deleted, preserving ordered operations", () => {
+		const messages = [
+			...mutation("create", "write", { path: "delta.txt", content: "x" }),
+			...mutation("remove", "bash", { command: 'cd "C:/Users/vi/Desktop/tst" && rm -f delta.txt' }, { exitCode: 0 }),
+		];
+		const [file] = collectSessionChangedFiles(messages, "C:/Users/vi/Desktop/tst");
+		expect(file.path).toBe("delta.txt");
+		expect(file.status).toBe("deleted");
+		expect(file.operations.map((op) => op.label)).toEqual(["created", "deleted"]);
+	});
+	it("tracks cd-relative moves and deletes in history order", () => {
+		const messages = [
+			...mutation("create", "write", { path: "tmp_delete_me.txt", content: "x" }),
+			...mutation(
+				"move",
+				"bash",
+				{ command: 'cd "C:/Users/vi/Desktop/tst" && mkdir -p sub && mv tmp_delete_me.txt sub/moved.txt' },
+				{ exitCode: 0 },
+			),
+			...mutation(
+				"remove",
+				"bash",
+				{ command: 'cd "C:/Users/vi/Desktop/tst" && rm -f sub/moved.txt && rmdir sub' },
+				{ exitCode: 0 },
+			),
+		];
+		const files = collectSessionChangedFiles(messages, "C:/Users/vi/Desktop/tst");
+		expect(files.map((file) => [file.path, file.status])).toEqual([
+			["sub", "deleted"],
+			["sub/moved.txt", "deleted"],
+			["tmp_delete_me.txt", "moved"],
+		]);
+		expect(files.find((file) => file.path === "tmp_delete_me.txt")?.operations.map((op) => op.label)).toEqual([
+			"created",
+			"moved",
+		]);
+		expect(files.find((file) => file.path === "sub")?.kind).toBe("dir");
+		expect(files.find((file) => file.path === "sub/moved.txt")?.operations.map((op) => op.label)).toEqual([
+			"moved",
+			"deleted",
+		]);
+	});
+	it("does not count failed shell deletes", () => {
+		expect(
+			collectSessionChangedFiles(
+				mutation("remove", "bash", { command: "rm -f missing.txt" }, { exitCode: 1, stderr: "failure" }),
+				"/repo",
+			),
+		).toEqual([]);
 	});
 	it("merges Windows absolute, relative, separator and case variants", () => {
 		const messages = [
@@ -83,6 +134,10 @@ describe("session changed files", () => {
 		const files = collectSessionChangedFiles(messages, "c:/repo");
 		expect(files).toHaveLength(1);
 		expect(files[0].operations).toHaveLength(3);
+	});
+	it("matches absolute Windows preview receipt paths regardless of slash and drive casing", () => {
+		expect(samePreviewPath("C:\\Repo\\src\\a.ts", "c:/repo/src/a.ts")).toBe(true);
+		expect(samePreviewPath("/repo/src/a.ts", "/repo/src/b.ts")).toBe(false);
 	});
 	it("does not merge case-sensitive POSIX files or paths outside the workspace", () => {
 		const files = collectSessionChangedFiles(
