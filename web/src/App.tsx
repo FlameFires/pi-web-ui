@@ -171,6 +171,7 @@ import {
 import { shouldSuppressNotify, currentPresence } from "./notify";
 import { useWideChat, useHideModelRow } from "./chat-width-settings";
 import { registerFilePreviewHost } from "./file-preview-bridge";
+import { useFilePreviewState } from "./use-file-preview-state";
 import { registerImageLightboxHost, type ImageLightboxTarget } from "./image-lightbox-bridge";
 import { ImageLightbox } from "./components/ImageLightbox";
 import { registerImageOcrInstaller, setImageOcrInstallState } from "./image-ocr-install";
@@ -401,8 +402,8 @@ export function App() {
 		registerAttachmentSink((items) => setAttachments((prev) => appendDraftAttachments(prev, items)));
 		return () => registerAttachmentSink(null);
 	}, []);
-	const [previewFiles, setPreviewFiles] = useState<PreviewFile[] | null>(null);
-	const [previewIndex, setPreviewIndex] = useState(0);
+	const { previewFiles, previewIndex, setPreviewFiles, setPreviewIndex, recentPreview, reopenPreview } =
+		useFilePreviewState(cwd);
 	const previewFile = previewFiles ? (previewFiles[previewIndex] ?? previewFiles[0] ?? null) : null;
 	const [pluginFile, setPluginFile] = useState<{
 		file: PreviewFile;
@@ -415,36 +416,42 @@ export function App() {
 		previewOpenRef.current = previewFiles !== null;
 		pluginFileOpenRef.current = pluginFile;
 	}, [previewFiles, pluginFile]);
-	const openFile = useCallback((path: string, name: string) => {
-		const entry = findFileHandler(name);
-		if (entry) {
-			setPreviewFiles(null);
-			setPluginFile({ file: { path, name }, plugin: entry.plugin, declaration: entry.declaration });
-			return;
-		}
-		setPluginFile(null);
-		setPreviewFiles([{ path, name }]);
-		setPreviewIndex(0);
-	}, []);
-	const openFileList = useCallback((files: PreviewFile[], initialIndex = 0) => {
-		const list = (Array.isArray(files) ? files : []).filter((f) => f && typeof f.path === "string" && f.path);
-		if (list.length === 0) return;
-		const clamped = Math.min(Math.max(0, initialIndex | 0), list.length - 1);
-		const first = list[clamped] ?? list[0];
-		const entry = first ? findFileHandler(first.name) : null;
-		if (entry && first) {
-			setPreviewFiles(null);
-			setPluginFile({
-				file: { path: first.path, name: first.name },
-				plugin: entry.plugin,
-				declaration: entry.declaration,
-			});
-			return;
-		}
-		setPluginFile(null);
-		setPreviewFiles(list.map((f) => ({ path: f.path, name: f.name })));
-		setPreviewIndex(clamped);
-	}, []);
+	const openFile = useCallback(
+		(path: string, name: string) => {
+			const entry = findFileHandler(name);
+			if (entry) {
+				setPreviewFiles(null);
+				setPluginFile({ file: { path, name }, plugin: entry.plugin, declaration: entry.declaration });
+				return;
+			}
+			setPluginFile(null);
+			setPreviewFiles([{ path, name }]);
+			setPreviewIndex(0);
+		},
+		[setPreviewFiles, setPreviewIndex],
+	);
+	const openFileList = useCallback(
+		(files: PreviewFile[], initialIndex = 0) => {
+			const list = (Array.isArray(files) ? files : []).filter((f) => f && typeof f.path === "string" && f.path);
+			if (list.length === 0) return;
+			const clamped = Math.min(Math.max(0, initialIndex | 0), list.length - 1);
+			const first = list[clamped] ?? list[0];
+			const entry = first ? findFileHandler(first.name) : null;
+			if (entry && first) {
+				setPreviewFiles(null);
+				setPluginFile({
+					file: { path: first.path, name: first.name },
+					plugin: entry.plugin,
+					declaration: entry.declaration,
+				});
+				return;
+			}
+			setPluginFile(null);
+			setPreviewFiles(list.map((f) => ({ path: f.path, name: f.name })));
+			setPreviewIndex(clamped);
+		},
+		[setPreviewFiles, setPreviewIndex],
+	);
 	useEffect(() => {
 		registerFilePreviewHost({
 			open: (f) => openFile(f.path, f.name),
@@ -452,7 +459,7 @@ export function App() {
 			isOpen: () => previewOpenRef.current || pluginFileOpenRef.current !== null,
 		});
 		return () => registerFilePreviewHost(null);
-	}, [openFile]);
+	}, [openFile, openFileList]);
 	const [lightboxImage, setLightboxImage] = useState<ImageLightboxTarget | null>(null);
 	const lightboxOpenRef = useRef(false);
 	useEffect(() => {
@@ -3249,6 +3256,11 @@ export function App() {
 				</div>
 			</TemplateProvider>
 			<FooterBar
+				recentPreview={recentPreview}
+				onReopenPreview={() => {
+					setPluginFile(null);
+					reopenPreview();
+				}}
 				onCreateCli={openNativeCliCreate}
 				chat={chat}
 				bottombarItems={uiSlots["bottombar"]}

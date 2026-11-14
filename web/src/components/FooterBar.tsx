@@ -4,6 +4,9 @@ import { appSend, useAppField } from "../app-globals";
 import type { UiSlotEntry } from "../ui-slots";
 import { ProjectPicker } from "./ProjectPicker.js";
 import { BarItem, type ViewName } from "./BarItem";
+import { useT } from "../i18n";
+import { FiFileText } from "react-icons/fi";
+import type { PreviewSnapshot } from "../use-file-preview-state";
 
 interface FooterBarProps {
 	bottombarItems?: import("../ui-slots").UiSlotEntry[];
@@ -14,6 +17,8 @@ interface FooterBarProps {
 	onCreateCli?: (cwd?: string) => void;
 	onOpenGlobalSearch?: () => void;
 	onOpenBgTasks?: () => void;
+	recentPreview?: PreviewSnapshot | null;
+	onReopenPreview?: () => void;
 }
 
 const FALLBACK_BOTTOMBAR: { id: string; align: "start" | "end" }[] = [
@@ -39,7 +44,10 @@ export function FooterBar({
 	onCreateCli,
 	onOpenGlobalSearch,
 	onOpenBgTasks,
+	recentPreview,
+	onReopenPreview,
 }: FooterBarProps) {
+	const t = useT();
 	const workspaceRoots = useAppField("workspaceRoots");
 	const state = chat.state;
 	const [editing, setEditing] = useState(false);
@@ -101,7 +109,28 @@ export function FooterBar({
 
 	return (
 		<footer className="statusbar">
-			<div className="statusbar-left">{renderGroup(leftItems)}</div>
+			<div className="statusbar-left">
+				{recentPreview && onReopenPreview && (
+					<button
+						type="button"
+						className="statusbar-preview"
+						onClick={onReopenPreview}
+						title={t("reopenFilePreview", {
+							name: recentPreview.files[recentPreview.index]?.name ?? "",
+							count: recentPreview.files.length,
+						})}
+					>
+						<FiFileText aria-hidden="true" />
+						<span>
+							{t("reopenFilePreview", {
+								name: recentPreview.files[recentPreview.index]?.name ?? "",
+								count: recentPreview.files.length,
+							})}
+						</span>
+					</button>
+				)}
+				{renderGroup(leftItems)}
+			</div>
 			{centerItems.length > 0 && <div className="statusbar-center">{renderGroup(centerItems)}</div>}
 			<div className="statusbar-right">{renderGroup(rightItems)}</div>
 			{editing && (

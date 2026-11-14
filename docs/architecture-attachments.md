@@ -109,6 +109,8 @@
 
 ## 文件预览协议
 
+文件预览关闭后保留最近一组文件及选中项，底部状态栏提供「恢复预览」入口。状态由 `web/src/use-file-preview-state.ts` 管理，以工作区 cwd 隔离，存入当前浏览器标签页的 `sessionStorage`；刷新后恢复入口，不自动打开弹窗。仅保存文件路径、名称与索引，浏览器存储不可用时退回内存；新打开的文件组替换当前项目的上一组。切换项目关闭当前预览，切回可恢复原组。此状态不包含滚动位置、缩放或未保存的编辑草稿。
+
 - 客户端发 `{ type: "read_file", path }` → 服务端回 `{ type: "file_content", path, name, text, truncated, binary, lines, size }`。
 - 只读文件前 **512KB**（`MAX_PREVIEW_BYTES`）；**内容嗅探决定文本还是二进制**：无 NUL、控制字符占比 < 2% 即按文本预览（`looksLikeText`）——未知/无扩展名文件（jsonl、.log.1 等）也能打开；**文本解码带 GBK 回退**（`decodeText`：严格 UTF-8 失败 → GBK → latin1，预览/行附件都用它），Windows 老中文文件不再乱码；二进制返回 `binary: true`，`text` 为前 4KB 的**十六进制视图**（`hexDump`，前端 `.fp-hex` 渲染，可下载完整文件）。路径经 `resolve + relative` 校验，`..` 越界直接拒。
 - **媒体预览走 HTTP**：image/video 经 `/api/file?clientId=…&path=…` 流式返回（`sendFile` 支持 Range），路径按**该客户端的会话 cwd**（打开的项目）解析，而非服务启动目录——两者可能不一致；`clientId` 缺失或会话不存在时回退到服务启动 `CWD`。路径校验统一走 `workspacePath()`（agent-service 导出）。

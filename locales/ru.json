@@ -3,6 +3,7 @@
 	"nativeName": "Русский",
 	"version": "0.117.0",
 	"strings": {
+		"reopenFilePreview": "Preview: {name} ({count})",
 		"nativeCli": "CLI",
 		"nativeCliRemoteLocation": "Runs on SSH {host}",
 		"nativeCliRemotePath": "Remote directory: {path}",

@@ -8911,6 +8911,37 @@
 		flex-shrink: 0;
 	}
 
+	.statusbar-preview {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		min-width: 0;
+		max-width: min(240px, 40vw);
+		padding: 2px 4px;
+		border: 0;
+		border-radius: 3px;
+		background: transparent;
+		color: var(--text);
+		font: inherit;
+		cursor: pointer;
+	}
+	.statusbar-preview:hover {
+		background: var(--bg-elev2);
+	}
+	.statusbar-preview:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 1px;
+	}
+	.statusbar-preview svg {
+		flex-shrink: 0;
+	}
+	.statusbar-preview span {
+		min-width: 0;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 	.statusbar-left,
 	.statusbar-right {
 		display: flex;
