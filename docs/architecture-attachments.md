@@ -107,6 +107,12 @@
 - 预览提供图片尺寸、放大/缩小、100% 原始尺寸与适应窗口，放大后可滚动查看细节。`ImageLightboxTarget.actions` 保留调用方上下文动作（带文字标签，其余按钮只留图标）；文件预览直接使用统一下载，插件不再另建图片灯箱。
 - 提供者及插件桥协议见 `architecture-plugins.md` 的“图片预览与 OCR 提供者”。回归：`tests/unit/image-ocr.test.ts`、`tests/unit/image-preview-actions.test.ts`（原始字节、MIME、剪贴板激活、下载取消与失败）、`tests/image-preview-ui-test.mjs`（`PI_TEST_REAL_OCR=1` 验证真实中英文引擎下载/识别）、`tests/image-ocr-install-ui-test.mjs`（构建后验证未安装点击安装、授权层级及禁用后重新启用，不调用模型）。
 
+## 会话改动文件
+
+底部状态栏的「改动文件」入口汇总当前会话已加载历史中成功完成的文件编辑操作，按路径去重并展示操作次数。展开文件可查看保留的操作记录，普通 edit/write 复用文件 diff 卡片；patch 展示结果记录，支持多文件、删除和移动。已删除或移走的路径不提供当前文件预览入口。
+
+数据来源是 `UiState.messages` 的 toolCall/toolResult 对应关系，纯函数位于 `web/src/session-changed-files.ts`，入口与浮层位于 `web/src/components/SessionChangedFiles.tsx`。不使用 Git 工作区状态或目录监听推断会话归属，不覆盖终端脚本、codemode 内部调用、子代理或其他会话的修改；操作记录也不等于最终 Git 净差异。失败、未完成和明确无改动的操作不计入。界面随会话切换、历史加载及回退重新计算，提交文件不会主动清空历史记录。较早消息未加载时显式提示范围不完整，已压缩或截断且无法恢复路径的记录不能统计。
+
 ## 文件预览协议
 
 - 客户端发 `{ type: "read_file", path }` → 服务端回 `{ type: "file_content", path, name, text, truncated, binary, lines, size }`。

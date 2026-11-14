@@ -4,6 +4,7 @@ import { appSend, useAppField } from "../app-globals";
 import type { UiSlotEntry } from "../ui-slots";
 import { ProjectPicker } from "./ProjectPicker.js";
 import { BarItem, type ViewName } from "./BarItem";
+import { SessionChangedFiles } from "./SessionChangedFiles";
 
 interface FooterBarProps {
 	bottombarItems?: import("../ui-slots").UiSlotEntry[];
@@ -101,7 +102,10 @@ export function FooterBar({
 
 	return (
 		<footer className="statusbar">
-			<div className="statusbar-left">{renderGroup(leftItems)}</div>
+			<div className="statusbar-left">
+				<SessionChangedFiles state={state} />
+				{renderGroup(leftItems)}
+			</div>
 			{centerItems.length > 0 && <div className="statusbar-center">{renderGroup(centerItems)}</div>}
 			<div className="statusbar-right">{renderGroup(rightItems)}</div>
 			{editing && (

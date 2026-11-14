@@ -3,6 +3,13 @@
 	"nativeName": "Türkçe",
 	"version": "0.105.1",
 	"strings": {
+		"sessionFiles.title": "Session file changes",
+		"sessionFiles.count": "Files changed ({count})",
+		"sessionFiles.operations": "{count} operations",
+		"sessionFiles.scope": "Successful file edits in the loaded conversation history. Expand a file to review its operation records. Terminal scripts and other sessions are not included; this is not a net Git diff.",
+		"sessionFiles.partial": "Earlier messages are not loaded. Load earlier history in the conversation to include more file changes.",
+		"sessionFiles.empty": "No successful file edits found in the loaded history.",
+		"sessionFiles.noDetail": "This operation has no retained detail.",
 		"nativeCli": "CLI",
 		"nativeCliRemoteLocation": "Runs on SSH {host}",
 		"nativeCliRemotePath": "Remote directory: {path}",

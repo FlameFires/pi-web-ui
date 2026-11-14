@@ -3,6 +3,13 @@
 	"nativeName": "繁體中文（台灣）",
 	"version": "0.107.0",
 	"strings": {
+		"sessionFiles.title": "本会话檔案改动",
+		"sessionFiles.count": "改动檔案（{count}）",
+		"sessionFiles.operations": "{count} 次操作",
+		"sessionFiles.scope": "汇总已加载会话歷史中成功的檔案編輯，展开檔案可查看操作记录。不包含終端機脚本及其他会话的修改，也不代表 Git 净差异。",
+		"sessionFiles.partial": "较早消息尚未加载。可在對話中加载更早歷史，以补充檔案改动记录。",
+		"sessionFiles.empty": "已加载歷史中尚无成功的檔案編輯记录。",
+		"sessionFiles.noDetail": "该操作未保留详细内容。",
 		"nativeCli": "CLI",
 		"nativeCliRemoteLocation": "執行位置：SSH {host}",
 		"nativeCliRemotePath": "遠端目錄：{path}",
