@@ -7,6 +7,7 @@ import { BarItem, type ViewName } from "./BarItem";
 import { useT } from "../i18n";
 import { FiFileText } from "react-icons/fi";
 import type { PreviewSnapshot } from "../use-file-preview-state";
+import { SessionChangedFiles } from "./SessionChangedFiles";
 
 interface FooterBarProps {
 	bottombarItems?: import("../ui-slots").UiSlotEntry[];
@@ -129,6 +130,7 @@ export function FooterBar({
 						</span>
 					</button>
 				)}
+				<SessionChangedFiles state={state} />
 				{renderGroup(leftItems)}
 			</div>
 			{centerItems.length > 0 && <div className="statusbar-center">{renderGroup(centerItems)}</div>}
