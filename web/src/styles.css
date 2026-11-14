@@ -9003,6 +9003,20 @@
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
 	}
+	.session-files-state {
+		flex-shrink: 0;
+		padding: 2px 6px;
+		border-radius: 3px;
+		background: var(--bg-elev1);
+		color: var(--text-dim);
+	}
+	.session-files-item.is-deleted .session-files-path,
+	.session-files-item.is-moved .session-files-path {
+		color: var(--text-dim);
+	}
+	.session-files-item.is-deleted .session-files-path {
+		text-decoration: line-through;
+	}
 
 	.statusbar-left,
 	.statusbar-right {

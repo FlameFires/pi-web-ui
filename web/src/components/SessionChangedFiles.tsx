@@ -89,7 +89,10 @@ function SessionFilesPanel({
 			{!files.length && <p className="session-files-empty">{t("sessionFiles.empty")}</p>}
 			<div className="session-files-list">
 				{files.map((file) => (
-					<details key={file.path} className="session-files-item">
+					<details
+						key={file.path}
+						className={`session-files-item${file.status !== "present" ? ` is-${file.status}` : ""}`}
+					>
 						<summary
 							onClick={() =>
 								setExpanded((previous) => {
@@ -105,10 +108,17 @@ function SessionFilesPanel({
 								{file.path}
 							</span>
 							<span>{t("sessionFiles.operations", { count: file.operations.length })}</span>
+							{(file.status !== "present" || file.kind === "dir") && (
+								<span className={`session-files-state ${file.status}`}>
+									{file.kind === "dir" && file.status === "present"
+										? t("sessionFiles.state.directory")
+										: t(file.status === "deleted" ? "sessionFiles.state.deleted" : "sessionFiles.state.moved")}
+								</span>
+							)}
 						</summary>
 						{expanded.has(file.path) && (
 							<div className="session-files-detail">
-								{!file.deleted && (
+								{file.status === "present" && file.kind === "file" && (
 									<button
 										type="button"
 										className="btn"
@@ -122,7 +132,19 @@ function SessionFilesPanel({
 								)}
 								{file.operations.map((op) => (
 									<div key={op.id} className="session-files-operation">
-										<div className="session-files-operation-label">{op.toolName}</div>
+										<div className="session-files-operation-label">
+											{op.label
+												? t(
+														op.label === "created"
+															? "sessionFiles.operation.created"
+															: op.label === "deleted"
+																? "sessionFiles.state.deleted"
+																: op.label === "moved"
+																	? "sessionFiles.state.moved"
+																	: "sessionFiles.operation.edited",
+													)
+												: op.toolName}
+										</div>
 										{op.toolName === "edit" || op.toolName === "write" ? (
 											<FileChangeCard
 												toolName={op.toolName}

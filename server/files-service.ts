@@ -799,6 +799,18 @@ export class FilesService {
 			}
 		} catch (err) {
 			this.host.emit({
+				type: "file_content",
+				path: relPath.replaceAll("\\", "/"),
+				name: relPath.split(/[\\/]/).pop() ?? relPath,
+				kind: "none",
+				text: "",
+				truncated: false,
+				binary: false,
+				lines: 0,
+				size: 0,
+				error: (err as Error).message,
+			});
+			this.host.emit({
 				type: "notice",
 				level: "error",
 				text: `读取文件失败：${(err as Error).message}`,

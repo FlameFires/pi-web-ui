@@ -1,4 +1,10 @@
 {
+	"filePreviewLoadFailed": "文件读取失败：{error}",
+	"sessionFiles.state.deleted": "已删除",
+	"sessionFiles.state.moved": "已移动",
+	"sessionFiles.operation.created": "新建",
+	"sessionFiles.operation.edited": "编辑",
+	"sessionFiles.state.directory": "文件夹",
 	"sessionFiles.title": "本会话文件改动",
 	"sessionFiles.count": "改动文件（{count}）",
 	"sessionFiles.operations": "{count} 次操作",

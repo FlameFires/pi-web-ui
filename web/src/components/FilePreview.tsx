@@ -31,6 +31,7 @@ import { appSend } from "../app-globals";
 import { formatSize } from "../format-bytes";
 import { downloadFile } from "../download";
 import { ImageLightbox } from "./ImageLightbox";
+import { samePreviewPath } from "../file-preview-path";
 
 const MAX_PREVIEW_LINES = 5000;
 const LS_PREVIEW_TOC = "pi-web-ui:preview-toc";
@@ -84,6 +85,7 @@ export function FilePreview({
 	const [markdownPreview, setMarkdownPreview] = useState(true);
 	const [htmlPreview, setHtmlPreview] = useState(true);
 	const editViewRef = useRef(false);
+	const [loadError, setLoadError] = useState<string | null>(null);
 	const [wrap, setWrap] = useState(true);
 	const [fullscreen, setFullscreen] = useState(false);
 	const [zoom, setZoom] = useState(100);
@@ -101,10 +103,14 @@ export function FilePreview({
 		},
 		[],
 	);
-
-	useEffect(() => {
+	const requestFile = () => {
 		setLoading(true);
 		setLoaded(null);
+		setLoadError(null);
+		appSend({ type: "read_file", path: file.path });
+	};
+
+	useEffect(() => {
 		setSel(null);
 		setEditing(false);
 		setDraft("");
@@ -115,11 +121,18 @@ export function FilePreview({
 		setSaving(false);
 		setSaveUnknown(false);
 		if (saveTimer.current) clearTimeout(saveTimer.current);
-		appSend({ type: "read_file", path: file.path });
+		requestFile();
 	}, [file.path]);
 
 	useEffect(() => {
-		if (content && content.path === file.path) {
+		if (content && samePreviewPath(content.path, file.path)) {
+			if (content.error) {
+				setLoaded(null);
+				setLoadError(content.error);
+				setLoading(false);
+				return;
+			}
+			setLoadError(null);
 			setLoaded(content);
 			if (!editing) setDraft(content.text);
 			setLoading(false);
@@ -561,6 +574,14 @@ export function FilePreview({
 					</div>
 				)}
 
+				{loadError && !loading && (
+					<div className="fp-notice" role="alert">
+						<div>{t("filePreviewLoadFailed", { error: loadError })}</div>
+						<button type="button" className="btn" onClick={requestFile}>
+							{t("fileRefresh")}
+						</button>
+					</div>
+				)}
 				{loading && !loaded && <div className="fp-empty">{t("loading")}</div>}
 
 				{!loading && kind === "none" && !isBinary && <div className="fp-empty">{t("previewNotSupported")}</div>}

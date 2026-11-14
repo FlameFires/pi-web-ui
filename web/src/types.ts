@@ -22,6 +22,7 @@ export interface FileContent {
 	binary: boolean;
 	lines: number;
 	size: number;
+	error?: string;
 }
 
 export interface ToolStatus {

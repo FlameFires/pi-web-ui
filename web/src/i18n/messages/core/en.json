@@ -1,4 +1,10 @@
 {
+	"filePreviewLoadFailed": "File read failed: {error}",
+	"sessionFiles.state.deleted": "Deleted",
+	"sessionFiles.state.moved": "Moved",
+	"sessionFiles.operation.created": "Created",
+	"sessionFiles.operation.edited": "Edited",
+	"sessionFiles.state.directory": "Directory",
 	"sessionFiles.title": "Session file changes",
 	"sessionFiles.count": "Files changed ({count})",
 	"sessionFiles.operations": "{count} operations",
