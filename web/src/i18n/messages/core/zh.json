@@ -1,4 +1,5 @@
 {
+	"reopenFilePreview": "恢复预览：{name}（{count} 个文件）",
 	"nativeCli": "CLI",
 	"nativeCliRemoteLocation": "运行位置：SSH {host}",
 	"nativeCliRemotePath": "远端目录：{path}",

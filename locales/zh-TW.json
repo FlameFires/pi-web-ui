@@ -3,6 +3,7 @@
 	"nativeName": "繁體中文（台灣）",
 	"version": "0.107.0",
 	"strings": {
+		"reopenFilePreview": "恢复预览：{name}（{count} 个檔案）",
 		"nativeCli": "CLI",
 		"nativeCliRemoteLocation": "執行位置：SSH {host}",
 		"nativeCliRemotePath": "遠端目錄：{path}",
