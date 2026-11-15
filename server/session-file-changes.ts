@@ -22,13 +22,57 @@ const FILE_MUTATIONS = new Set([
 const record = (value: unknown): Record<string, unknown> =>
 	value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 const string = (value: unknown): string => (typeof value === "string" ? value : "");
+function decodeQuotedPath(value: string): string {
+	if (!value.startsWith('"') || !value.endsWith('"')) return value;
+	const bytes: number[] = [];
+	const encoder = new TextEncoder();
+	const inner = value.slice(1, -1);
+	const escapes: Record<string, string> = {
+		a: "\x07",
+		b: "\b",
+		t: "\t",
+		n: "\n",
+		v: "\v",
+		f: "\f",
+		r: "\r",
+		'"': '"',
+		"\\": "\\",
+	};
+	for (let i = 0; i < inner.length;) {
+		if (inner[i] === "\\") {
+			const octal = /^[0-7]{1,3}/.exec(inner.slice(i + 1));
+			if (octal) {
+				const byte = parseInt(octal[0], 8);
+				if (byte > 255) return value;
+				bytes.push(byte);
+				i += octal[0].length + 1;
+				continue;
+			}
+			const decoded = escapes[inner[i + 1]];
+			if (decoded === undefined) return value;
+			bytes.push(...encoder.encode(decoded));
+			i += 2;
+		} else {
+			const point = String.fromCodePoint(inner.codePointAt(i)!);
+			bytes.push(...encoder.encode(point));
+			i += point.length;
+		}
+	}
+	try {
+		return new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(bytes));
+	} catch {
+		return value;
+	}
+}
 export function diffHeaderPath(details: unknown): string {
 	const value = record(details);
 	for (const key of ["patch", "diff"]) {
 		for (const line of string(value[key]).split("\n")) {
-			const match = /^(?:\+\+\+|---)\s+(?:[abciow]\/)?(.+)$/.exec(line);
-			const candidate = match?.[1].trim();
-			if (candidate && !/^\/dev\/null$/i.test(candidate)) return candidate;
+			const match = /^(?:\+\+\+|---)\s+(.+)$/.exec(line);
+			if (!match) continue;
+			const raw = match[1].split("\t", 1)[0].trim();
+			const candidate = decodeQuotedPath(raw).replace(/^[abciow]\//, "");
+			if (candidate && candidate !== "/dev/null") return candidate;
 		}
 	}
 	return "";

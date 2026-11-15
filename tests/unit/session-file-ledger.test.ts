@@ -211,6 +211,40 @@ describe("session-file-ledger", () => {
 		expect(JSON.parse(await readFile(join(fileDir, key), "utf8")).id).toBe("interrupted");
 		expect(await ledger.append(mutation("interrupted"))).toBe(false);
 	});
+	it("repairs persisted quoted paths from retained operations without deleting their payloads", async () => {
+		const { ledger } = await fixture();
+		const encoded = String.raw`\347\236\254\345\245\275`;
+		const path = `"19.00/${encoded.replaceAll("\\", "/")}/test.py"`;
+		const operation = {
+			id: "old-quoted",
+			toolName: "replace",
+			output: "done",
+			argumentsText: "{}",
+			details: { diff: `--- "a/19.00/${encoded}/test.py"\n+++ "b/19.00/${encoded}/test.py"\n` },
+		};
+		const key = "0000000000000001.json";
+		await mkdir(ledger.directory, { recursive: true });
+		await writeFile(join(ledger.directory, "head.json"), JSON.stringify({ version: 1, sequence: 1, backfilled: true }));
+		await writeFile(
+			join(ledger.directory, "pending.json"),
+			JSON.stringify({
+				path,
+				key,
+				operation,
+				summary: { path, kind: "file", status: "present", operationCount: 1, key, lastTimestamp: 1 },
+				evidence: { before: { available: false }, after: { available: false } },
+			}),
+		);
+		expect((await ledger.page("before")).files[0].path).toBe(path);
+		expect(await ledger.backfill()).toBe(true);
+		expect((await ledger.page("after")).files).toEqual([
+			{ path: "19.00/瞬好/test.py", kind: "file", status: "present", operationCount: 1 },
+		]);
+		expect((await ledger.page("detail", "19.00/瞬好/test.py")).operations[0].id).toBe(operation.id);
+		expect(await ledger.backfill()).toBe(false);
+		const oldDir = join(ledger.directory, "files", createHash("sha256").update(path).digest("hex"));
+		expect(JSON.parse(await readFile(join(oldDir, key), "utf8"))).toEqual(operation);
+	});
 	it("captures bounded UTF-8 evidence, absent files, and rejects binary/oversized content", async () => {
 		const { dir } = await fixture();
 		await writeFile(join(dir, "empty"), "");
