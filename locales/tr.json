@@ -367,6 +367,7 @@
 		"timeGroupPastWeek": "Past 7 days",
 		"timeGroupEarlier": "Earlier",
 		"subagentBadge": "Alt ajan",
+		"collaborationBadge": "Collaboration",
 		"collapseSubagents": "Alt ajanları daralt",
 		"expandSubagents": "Alt ajanları genişlet",
 		"subagentTitle": "Alt ajan · {title}",

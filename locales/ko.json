@@ -367,6 +367,7 @@
 		"timeGroupPastWeek": "Past 7 days",
 		"timeGroupEarlier": "Earlier",
 		"subagentBadge": "서브에이전트",
+		"collaborationBadge": "Collaboration",
 		"collapseSubagents": "서브에이전트 접기",
 		"expandSubagents": "서브에이전트 펼치기",
 		"subagentTitle": "서브에이전트 · {title}",
