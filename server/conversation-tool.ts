@@ -46,6 +46,7 @@ export function mergeConversationTools(tools: ToolDefinition[]): ToolDefinition[
 				description:
 					"Create and manage collaborative conversations; inspect running and historical sessions. Only listed sessions are readable.",
 				promptSnippet: "manage conversations and inspect referenced chats (list/read/files/status)",
+				promptGuidelines: [...new Set([...(management.promptGuidelines ?? []), ...(reader.promptGuidelines ?? [])])],
 				parameters: Type.Object({
 					...properties,
 					action: Type.Unsafe<string>({

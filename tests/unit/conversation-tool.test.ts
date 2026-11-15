@@ -21,6 +21,7 @@ describe("conversation compatibility", () => {
 		reader.execute = readExecute;
 		const tools = mergeConversationTools([...management, reader]);
 		expect(tools.map((tool) => tool.name)).toEqual(["conversation"]);
+		expect(tools[0].promptGuidelines).toEqual(expect.arrayContaining([expect.stringContaining("Check list/status")]));
 		const schema = tools[0].parameters as any;
 		expect(schema.properties.action.enum).toEqual(
 			expect.arrayContaining(["spawn", "dismiss", "list", "read", "files", "status"]),
