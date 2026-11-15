@@ -32,6 +32,8 @@ import { formatSize } from "../format-bytes";
 import { downloadFile } from "../download";
 import { ImageLightbox } from "./ImageLightbox";
 import { samePreviewPath } from "../file-preview-path";
+import { SyntaxText } from "./SyntaxText";
+import { detectLanguage } from "../file-diff";
 
 const MAX_PREVIEW_LINES = 5000;
 const LS_PREVIEW_TOC = "pi-web-ui:preview-toc";
@@ -719,7 +721,9 @@ export function FilePreview({
 									}}
 								>
 									<span className="fp-num">{n}</span>
-									<span className="fp-code-text">{text}</span>
+									<span className="fp-code-text">
+										<SyntaxText text={text} language={detectLanguage(file.path)} />
+									</span>
 								</div>
 							);
 						})}
