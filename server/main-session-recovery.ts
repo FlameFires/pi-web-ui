@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { writeAtomic } from "./atomic-file.js";
 
 const BOOT_ID = randomUUID();
 const queues = new Map<string, Promise<void>>();
@@ -27,9 +28,7 @@ export function markMainRun(dataDir: string, marker: Omit<MainRunMarker, "bootId
 	const path = markerPath(dataDir, marker.sessionFile);
 	return serial(path, async () => {
 		await mkdir(join(dataDir, "main-session-runs"), { recursive: true });
-		const temp = path + ".tmp";
-		await writeFile(temp, JSON.stringify({ ...marker, bootId: BOOT_ID }), "utf8");
-		await rename(temp, path);
+		await writeAtomic(path, JSON.stringify({ ...marker, bootId: BOOT_ID }));
 	});
 }
 export function settleMainRun(dataDir: string, sessionFile: string): Promise<void> {

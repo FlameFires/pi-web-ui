@@ -28,9 +28,10 @@ export const SyntaxText = memo(function SyntaxText({
 }) {
 	const inheritedLanguage = useContext(SyntaxLanguageContext);
 	const language = specifiedLanguage ?? inheritedLanguage;
+	const shouldHighlight = language !== "plaintext" && text.length <= 10000 && text.trim().length > 0;
 	const [ready, setReady] = useState(!!highlighter);
 	useEffect(() => {
-		if (language === "plaintext" || ready) return;
+		if (!shouldHighlight || ready) return;
 		let active = true;
 		loading ??= import("lowlight").then(({ createLowlight, common }) => (highlighter = createLowlight(common)));
 		void loading
@@ -43,9 +44,9 @@ export const SyntaxText = memo(function SyntaxText({
 		return () => {
 			active = false;
 		};
-	}, [language, ready]);
+	}, [shouldHighlight, ready]);
 	const content = useMemo(() => {
-		if (!ready || !highlighter?.registered(language) || text.length > 10000) return text;
+		if (!ready || !highlighter?.registered(language) || !shouldHighlight) return text;
 		const key = `${language}\0${text}`;
 		if (cache.has(key)) return cache.get(key);
 		try {
@@ -56,6 +57,6 @@ export const SyntaxText = memo(function SyntaxText({
 		} catch {
 			return text;
 		}
-	}, [text, language, ready]);
+	}, [text, language, ready, shouldHighlight]);
 	return <span className="syntax-text">{content}</span>;
 });

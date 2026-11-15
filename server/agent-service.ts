@@ -931,6 +931,8 @@ export class ClientSession {
 		const dataDir = (this.stateStore as ClientStateStore | undefined)?.dataDir;
 		const sessionFile = this.sessionFileOfConversation(conv);
 		if (!dataDir || !sessionFile) return;
+		const runId = `main:${conversationIdentity(conv)}`;
+		if (this.interruptedMainOffers.has(runId)) return;
 		const children = [...this.interruptedSubagentOffers.entries()]
 			.filter(([, parentId]) => parentId === conv.id)
 			.map(([id]) => this.subagentLedger.read(id))
@@ -939,8 +941,6 @@ export class ClientSession {
 			(await interruptedMainRun(dataDir, sessionFile)) ??
 			(children.length ? { title: conv.title || "Conversation", cwd: conv.cwd } : undefined);
 		if (!marker || resolve(marker.cwd) !== resolve(conv.cwd)) return;
-		const runId = `main:${conversationIdentity(conv)}`;
-		if (this.interruptedMainOffers.has(runId)) return;
 		this.interruptedMainOffers.set(runId, conv);
 		const notice: ServerMessage = {
 			type: "notice",
