@@ -8999,17 +8999,20 @@
 		outline-offset: 2px;
 	}
 	.session-files-panel {
-		width: min(680px, calc(100vw - 16px));
-		max-height: min(72dvh, 720px);
+	.session-files-panel {
+		width: min(480px, calc(100vw - 32px));
+		height: min(340px, calc(100vh - 120px));
 		box-sizing: border-box;
-		padding: 14px;
-		overflow: auto;
-		overscroll-behavior: contain;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding: 8px;
+		overflow: hidden;
 		border: 1px solid var(--border);
-		border-radius: 10px;
+		border-radius: 8px;
 		background: var(--bg-elev2);
 		color: var(--text);
-		box-shadow: 0 8px 32px #0003;
+		box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.45);
 		font-size: 12px;
 		overflow-wrap: anywhere;
 		word-break: break-word;
@@ -9024,11 +9027,19 @@
 		max-width: 100%;
 	}
 	.session-files-heading {
-		font-size: 14px;
+		flex: none;
+		font-size: 13px;
+	}
+	.session-files-list {
+		flex: 1;
+		min-height: 0;
+		overflow: auto;
+		overscroll-behavior: contain;
+		padding-right: 2px;
 	}
 	.session-files-note,
 	.session-files-empty {
-		margin: 10px 0;
+		margin: 2px 0;
 		line-height: 1.6;
 		color: var(--text-dim);
 	}
