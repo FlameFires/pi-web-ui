@@ -22,6 +22,7 @@
 	"sessionFiles.scope": "Persistent operations from this session, independent of loaded chat history. Includes recognized terminal deletes and moves. Available transcript evidence may be incomplete; arbitrary shell writes are not reconstructed.",
 	"sessionFiles.partial": "Showing recorded operations while available transcript history is imported. Changes made while recording was disabled may be missing.",
 	"sessionFiles.cumulativeUnavailable": "Cumulative diff unavailable: complete first-before and latest-after evidence is missing. Each operation shows only its recorded patch ranges.",
+	"sessionFiles.cumulativeUnavailableShort": "Cumulative diff unavailable",
 	"sessionFiles.loadMore": "Next page",
 	"sessionFiles.rawDetail": "View recorded payload",
 	"sessionFiles.firstPage": "First page / Retry",

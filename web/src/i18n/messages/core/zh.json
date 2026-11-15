@@ -22,6 +22,7 @@
 	"sessionFiles.scope": "本会话持久操作记录，独立于聊天历史加载。包含可识别的终端删除和移动。可用转录证据可能不完整，不还原任意 Shell 写入。",
 	"sessionFiles.partial": "正在导入可用转录，目前展示已记录操作。关闭记录期间的改动可能缺失。",
 	"sessionFiles.cumulativeUnavailable": "累计差异不可用：缺少完整的首次修改前与最新修改后证据。各次操作只展示已记录补丁覆盖的范围。",
+	"sessionFiles.cumulativeUnavailableShort": "累计差异不可用",
 	"sessionFiles.loadMore": "下一页",
 	"sessionFiles.rawDetail": "查看记录原文",
 	"sessionFiles.firstPage": "首页 / 重试",

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FiFileText, FiHelpCircle, FiRefreshCw, FiX } from "react-icons/fi";
+import { FiAlertCircle, FiFileText, FiHelpCircle, FiRefreshCw, FiX } from "react-icons/fi";
 import type { UiState } from "../types";
 import { useT } from "../i18n";
 import { useFloatingPanel } from "../use-floating-panel";
@@ -84,8 +84,8 @@ function SessionFilesPanel({
 			aria-label={t("sessionFiles.title")}
 			tabIndex={-1}
 		>
-			<div className="session-files-heading cwd-mode-tabs">
-				<span className="cwd-mode-tab active session-files-title">{t("sessionFiles.title")}</span>
+			<div className="session-files-heading">
+				<strong className="session-files-title">{t("sessionFiles.title")}</strong>
 				<span className="session-files-help" title={help} aria-label={help} role="img" tabIndex={0}>
 					<FiHelpCircle aria-hidden="true" />
 				</span>
@@ -245,7 +245,10 @@ function LedgerEvidence({ path, ledger }: { path: string; ledger: ReturnType<typ
 					)}
 				</>
 			) : (
-				<p className="session-files-note">{t("sessionFiles.cumulativeUnavailable")}</p>
+				<p className="session-files-flag" title={t("sessionFiles.cumulativeUnavailable")}>
+					<FiAlertCircle aria-hidden="true" />
+					<span>{t("sessionFiles.cumulativeUnavailableShort")}</span>
+				</p>
 			)}
 			{page.rawText !== undefined && (
 				<>
