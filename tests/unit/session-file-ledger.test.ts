@@ -213,6 +213,8 @@ describe("session-file-ledger", () => {
 	});
 	it("captures bounded UTF-8 evidence, absent files, and rejects binary/oversized content", async () => {
 		const { dir } = await fixture();
+		await writeFile(join(dir, "empty"), "");
+		expect(await captureFileEvidence(join(dir, "empty"))).toEqual({ available: true, exists: true, text: "" });
 		expect(await captureFileEvidence(join(dir, "missing"))).toEqual({ available: true, exists: false, text: "" });
 		await writeFile(join(dir, "text"), "hello\n");
 		expect(await captureFileEvidence(join(dir, "text"))).toEqual({ available: true, exists: true, text: "hello\n" });
