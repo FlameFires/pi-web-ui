@@ -1574,6 +1574,7 @@ export type ClientMessage =
 			thinkingWrap?: boolean;
 			toolsWrap?: boolean;
 			sessionChangedFilesEnabled?: boolean;
+			filePreviewRestoreEnabled?: boolean;
 			toolImagesEnabled?: boolean;
 			keepRecentMessages?: number;
 			reversePagination?: boolean;
@@ -3055,6 +3056,7 @@ export interface UiSettingsState {
 	autoReload?: boolean;
 	toolsWrap: boolean;
 	sessionChangedFilesEnabled?: boolean;
+	filePreviewRestoreEnabled?: boolean;
 	toolImagesEnabled: boolean;
 	keepRecentMessages: number;
 	reversePagination?: boolean;

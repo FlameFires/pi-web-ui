@@ -516,6 +516,7 @@ export interface ClientSettings {
 	autoReload?: boolean;
 	toolsWrap: boolean;
 	sessionChangedFilesEnabled?: boolean;
+	filePreviewRestoreEnabled?: boolean;
 	toolImagesEnabled: boolean;
 	keepRecentMessages: number;
 	reversePagination?: boolean;
@@ -717,6 +718,7 @@ export const DEFAULT_DARK_MINIMAL_SETTINGS: ClientSettings = Object.freeze({
 	thinkingWrap: false,
 	toolsWrap: true,
 	sessionChangedFilesEnabled: true,
+	filePreviewRestoreEnabled: true,
 	toolImagesEnabled: true,
 	keepRecentMessages: 15,
 	reversePagination: false,
@@ -1443,6 +1445,7 @@ export class ClientStateStore {
 			autoReload: stored?.autoReload,
 			toolsWrap: stored?.toolsWrap ?? (stored ? true : DEFAULT_CLIENT_SETTINGS.toolsWrap),
 			sessionChangedFilesEnabled: stored?.sessionChangedFilesEnabled ?? true,
+			filePreviewRestoreEnabled: stored?.filePreviewRestoreEnabled ?? true,
 			toolImagesEnabled: stored?.toolImagesEnabled ?? true,
 			keepRecentMessages: normalizeKeepRecentMessages(stored?.keepRecentMessages),
 			reversePagination: stored?.reversePagination ?? false,
@@ -1554,6 +1557,7 @@ export class ClientStateStore {
 			autoReload: settings.autoReload ?? cur.autoReload,
 			toolsWrap: settings.toolsWrap ?? cur.toolsWrap ?? true,
 			sessionChangedFilesEnabled: settings.sessionChangedFilesEnabled ?? cur.sessionChangedFilesEnabled ?? true,
+			filePreviewRestoreEnabled: settings.filePreviewRestoreEnabled ?? cur.filePreviewRestoreEnabled ?? true,
 			toolImagesEnabled: settings.toolImagesEnabled ?? cur.toolImagesEnabled ?? true,
 			keepRecentMessages: normalizeKeepRecentMessages(
 				settings.keepRecentMessages ?? cur.keepRecentMessages ?? DEFAULT_KEEP_RECENT_MESSAGES,

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fakeClientSession } from "../helpers/fake-session.js";
 import { handleSessionLifecycleMessage } from "../../server/dispatch-domain-handlers.js";
 import { enqueueNotice, type NoticeLike } from "../../web/src/notice-policy.js";
+import * as mainRecovery from "../../server/main-session-recovery.js";
 
 function client() {
 	const records = [{ runId: "old-run", title: "Interrupted task", type: "implement", state: "interrupted" }];
@@ -25,6 +26,54 @@ function client() {
 }
 
 describe("interrupted subagent recovery actions", () => {
+	it("groups a restarted parent with its interrupted children in a single notice", async () => {
+		const { session } = client();
+		const parent = session.convs.get("parent");
+		parent.cwd = "/projects/self";
+		session.stateStore = { dataDir: "/unused" };
+		const spy = vi
+			.spyOn(mainRecovery, "interruptedMainRun")
+			.mockResolvedValue({
+				bootId: "old",
+				sessionFile: parent.session.sessionFile,
+				cwd: parent.cwd,
+				title: "Original parent",
+			});
+		try {
+			await session.recoverSubagentRuns(parent);
+			expect(session.emit).toHaveBeenCalledTimes(1);
+			const runs = session.emit.mock.calls[0][0].interruptedRuns;
+			expect(runs).toEqual([
+				{ runId: expect.stringMatching(/^main:/), title: "Original parent" },
+				{ runId: "old-run", title: "↳ Interrupted task" },
+			]);
+		} finally {
+			spy.mockRestore();
+		}
+	});
+	it("passes only this parent's unfinished child tasks into main recovery", async () => {
+		const { session } = client();
+		const original = session.convs.get("parent");
+		session.interruptedMainOffers.set("main:original", original);
+		session.interruptedSubagentOffers.set("child", "parent");
+		session.interruptedSubagentOffers.set("other", "other-parent");
+		session.interruptedSubagentOffers.set("done", "parent");
+		session.subagentLedgerStore.read = (id: string) => ({
+			runId: id,
+			title: id,
+			state: id === "done" ? "done" : "interrupted",
+			outputTail: "saved progress",
+		});
+		session.getLang = () => "en";
+		session.prompt = vi.fn().mockResolvedValue(undefined);
+		await session.resumeInterruptedSubagent("main:original");
+		const text = session.prompt.mock.calls[0][0];
+		expect(text).toContain('"runId":"child"');
+		expect(text).toContain("saved progress");
+		expect(text).toContain('conversation(action="resume"');
+		expect(text).not.toContain('"runId":"other"');
+		expect(text).not.toContain('"runId":"done"');
+	});
 	it("resumes a main session in its original conversation after the active view changes", async () => {
 		const { session, resume } = client();
 		const original = session.convs.get("parent");
