@@ -12545,6 +12545,50 @@
 		overflow-wrap: anywhere;
 		word-break: break-word;
 	}
+	.notice.notice-recovery {
+		display: grid;
+		grid-template-columns: 18px minmax(0, 1fr) 24px;
+		align-items: start;
+		gap: 10px;
+		width: min(560px, calc(100vw - 32px));
+		max-width: calc(100vw - 32px);
+		padding: 14px 12px 14px 16px;
+		border-left-width: 1px;
+		cursor: default;
+	}
+	.notice-recovery .notice-icon {
+		margin-top: 3px;
+	}
+	.notice-recovery .notice-text {
+		line-height: 1.6;
+	}
+	.notice-recovery .notice-close {
+		margin-top: -2px;
+	}
+	.notice-recovery .interrupted-runs {
+		margin-top: 12px;
+		gap: 8px;
+		justify-items: stretch;
+	}
+	.notice-recovery .interrupted-run {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 8px 16px;
+		padding-top: 10px;
+		border-top: 1px solid var(--border-soft);
+	}
+	.notice-recovery .interrupted-run-title {
+		font-weight: 500;
+	}
+	.notice-recovery .interrupted-run > .btn,
+	.notice-recovery .interrupted-run-state {
+		min-width: 64px;
+		text-align: center;
+	}
+	.notice-recovery .interrupted-run-error {
+		grid-column: 1 / -1;
+	}
 	.interrupted-runs {
 		display: grid;
 		gap: 8px;
