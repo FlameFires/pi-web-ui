@@ -84,12 +84,12 @@ function SessionFilesPanel({
 			aria-label={t("sessionFiles.title")}
 			tabIndex={-1}
 		>
-			<div className="session-files-heading cwd-picker-head">
-				<strong>{t("sessionFiles.title")}</strong>
+			<div className="session-files-heading cwd-mode-tabs">
+				<span className="cwd-mode-tab active session-files-title">{t("sessionFiles.title")}</span>
 				<span className="session-files-help" title={help} aria-label={help} role="img" tabIndex={0}>
 					<FiHelpCircle aria-hidden="true" />
 				</span>
-				<button type="button" className="file-diff-action-btn cwd-close" onClick={onClose} aria-label={t("close")}>
+				<button type="button" className="cwd-close" title={t("close")} aria-label={t("close")} onClick={onClose}>
 					<FiX />
 				</button>
 			</div>

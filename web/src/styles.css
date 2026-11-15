@@ -9015,8 +9015,23 @@
 		font-size: 12px;
 		overflow-wrap: anywhere;
 		word-break: break-word;
+		animation: session-files-panel-in 0.15s ease-out;
 	}
-	.session-files-heading,
+	@keyframes session-files-panel-in {
+		from {
+			opacity: 0;
+			transform: translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.session-files-panel {
+			animation: none;
+		}
+	}
 	.session-files-item summary {
 		display: flex;
 		align-items: center;
@@ -9027,9 +9042,19 @@
 	}
 	.session-files-heading {
 		flex: none;
-		font-size: 13px;
+		justify-content: flex-start;
+	}
+	.session-files-title {
+		flex: 0 1 auto;
+		text-align: left;
+		cursor: default;
+	}
+	.session-files-title:hover {
+		background: var(--bg-elev);
+		color: var(--accent);
 	}
 	.session-files-help {
+		flex: none;
 		display: inline-flex;
 		align-items: center;
 		margin-left: auto;
