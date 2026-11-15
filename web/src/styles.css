@@ -9036,17 +9036,50 @@
 	}
 	.session-files-state {
 		flex-shrink: 0;
-		padding: 2px 6px;
-		border-radius: 3px;
-		background: var(--bg-elev1);
+		font-size: 11px;
 		color: var(--text-dim);
 	}
-	.session-files-item.is-deleted .session-files-path,
-	.session-files-item.is-moved .session-files-path {
-		color: var(--text-dim);
+	.session-files-state.deleted {
+		color: var(--red-text);
 	}
-	.session-files-item.is-deleted .session-files-path {
-		text-decoration: line-through;
+	.session-files-state.moved {
+		color: var(--amber-text);
+	}
+	.session-files-preview {
+		flex: none;
+		border: 0;
+		background: transparent;
+		color: var(--link);
+		font: inherit;
+		font-size: 11px;
+		padding: 3px 5px;
+		cursor: pointer;
+	}
+	.session-files-preview:hover {
+		text-decoration: underline;
+	}
+	.session-files-preview:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.syntax-text .hljs-keyword,
+	.syntax-text .hljs-selector-tag {
+		color: var(--plugin-purple);
+	}
+	.syntax-text .hljs-string,
+	.syntax-text .hljs-attr {
+		color: var(--green);
+	}
+	.syntax-text .hljs-number,
+	.syntax-text .hljs-literal {
+		color: var(--amber-text);
+	}
+	.syntax-text .hljs-title,
+	.syntax-text .hljs-built_in {
+		color: var(--link);
+	}
+	.syntax-text .hljs-comment {
+		color: var(--text-dim);
 	}
 
 	.statusbar-left,

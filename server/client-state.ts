@@ -515,6 +515,7 @@ export interface ClientSettings {
 	devNoCache?: boolean;
 	autoReload?: boolean;
 	toolsWrap: boolean;
+	sessionChangedFilesEnabled?: boolean;
 	toolImagesEnabled: boolean;
 	keepRecentMessages: number;
 	reversePagination?: boolean;
@@ -715,6 +716,7 @@ export const DEFAULT_DARK_MINIMAL_SETTINGS: ClientSettings = Object.freeze({
 	parallelReminderEnabled: true,
 	thinkingWrap: false,
 	toolsWrap: true,
+	sessionChangedFilesEnabled: true,
 	toolImagesEnabled: true,
 	keepRecentMessages: 15,
 	reversePagination: false,
@@ -1440,6 +1442,7 @@ export class ClientStateStore {
 			devNoCache: stored?.devNoCache,
 			autoReload: stored?.autoReload,
 			toolsWrap: stored?.toolsWrap ?? (stored ? true : DEFAULT_CLIENT_SETTINGS.toolsWrap),
+			sessionChangedFilesEnabled: stored?.sessionChangedFilesEnabled ?? true,
 			toolImagesEnabled: stored?.toolImagesEnabled ?? true,
 			keepRecentMessages: normalizeKeepRecentMessages(stored?.keepRecentMessages),
 			reversePagination: stored?.reversePagination ?? false,
@@ -1550,6 +1553,7 @@ export class ClientStateStore {
 			devNoCache: settings.devNoCache ?? cur.devNoCache,
 			autoReload: settings.autoReload ?? cur.autoReload,
 			toolsWrap: settings.toolsWrap ?? cur.toolsWrap ?? true,
+			sessionChangedFilesEnabled: settings.sessionChangedFilesEnabled ?? cur.sessionChangedFilesEnabled ?? true,
 			toolImagesEnabled: settings.toolImagesEnabled ?? cur.toolImagesEnabled ?? true,
 			keepRecentMessages: normalizeKeepRecentMessages(
 				settings.keepRecentMessages ?? cur.keepRecentMessages ?? DEFAULT_KEEP_RECENT_MESSAGES,

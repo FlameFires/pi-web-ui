@@ -1542,6 +1542,7 @@ export interface DispatchSession {
 		terminalBashMaxForegroundMs?: number;
 		thinkingWrap?: boolean;
 		toolsWrap?: boolean;
+		sessionChangedFilesEnabled?: boolean;
 		toolImagesEnabled?: boolean;
 		keepRecentMessages?: number;
 		showForkedParentSessions?: boolean;

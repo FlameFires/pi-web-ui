@@ -216,6 +216,7 @@ interface DshSettings {
 	goalModeEnabled: boolean;
 	thinkingWrap: boolean;
 	toolsWrap: boolean;
+	sessionChangedFilesEnabled?: boolean;
 	toolImagesEnabled: boolean;
 	keepRecentMessages: number;
 	showForkedParentSessions: boolean;
@@ -275,6 +276,7 @@ const DEFAULT_SETTINGS: DshSettings = {
 	parallelReminderEnabled: true,
 	thinkingWrap: false,
 	toolsWrap: true,
+	sessionChangedFilesEnabled: true,
 	toolImagesEnabled: true,
 	keepRecentMessages: DEFAULT_KEEP_RECENT_MESSAGES,
 	showForkedParentSessions: false,
@@ -499,6 +501,7 @@ export class DshClientSession {
 				parallelReminderEnabled: savedSettings.parallelReminderEnabled ?? true,
 				thinkingWrap: savedSettings.thinkingWrap,
 				toolsWrap: savedSettings.toolsWrap,
+				sessionChangedFilesEnabled: savedSettings.sessionChangedFilesEnabled ?? true,
 				toolImagesEnabled: savedSettings.toolImagesEnabled ?? true,
 				keepRecentMessages: normalizeKeepRecentMessages(savedSettings.keepRecentMessages),
 				showForkedParentSessions: savedSettings.showForkedParentSessions ?? false,
@@ -3775,6 +3778,7 @@ export class DshClientSession {
 			parallelReminderEnabled: this.settings.parallelReminderEnabled,
 			thinkingWrap: this.settings.thinkingWrap,
 			toolsWrap: this.settings.toolsWrap,
+			sessionChangedFilesEnabled: this.settings.sessionChangedFilesEnabled,
 			toolImagesEnabled: this.settings.toolImagesEnabled,
 			keepRecentMessages: normalizeKeepRecentMessages(this.settings.keepRecentMessages),
 			showForkedParentSessions: this.settings.showForkedParentSessions ?? false,
@@ -3867,6 +3871,7 @@ export class DshClientSession {
 		parallelReminderEnabled?: boolean;
 		thinkingWrap?: boolean;
 		toolsWrap?: boolean;
+		sessionChangedFilesEnabled?: boolean;
 		toolImagesEnabled?: boolean;
 		keepRecentMessages?: number;
 		showForkedParentSessions?: boolean;
@@ -3912,6 +3917,8 @@ export class DshClientSession {
 			this.settings.parallelReminderEnabled = partial.parallelReminderEnabled;
 		if (partial.thinkingWrap !== undefined) this.settings.thinkingWrap = partial.thinkingWrap;
 		if (partial.toolsWrap !== undefined) this.settings.toolsWrap = partial.toolsWrap;
+		if (partial.sessionChangedFilesEnabled !== undefined)
+			this.settings.sessionChangedFilesEnabled = partial.sessionChangedFilesEnabled;
 		if (partial.toolImagesEnabled !== undefined) this.settings.toolImagesEnabled = partial.toolImagesEnabled;
 		if (partial.keepRecentMessages !== undefined)
 			this.settings.keepRecentMessages = normalizeKeepRecentMessages(partial.keepRecentMessages);
@@ -3962,6 +3969,7 @@ export class DshClientSession {
 			parallelReminderEnabled: this.settings.parallelReminderEnabled,
 			thinkingWrap: this.settings.thinkingWrap,
 			toolsWrap: this.settings.toolsWrap,
+			sessionChangedFilesEnabled: this.settings.sessionChangedFilesEnabled,
 			toolImagesEnabled: this.settings.toolImagesEnabled,
 			keepRecentMessages: normalizeKeepRecentMessages(this.settings.keepRecentMessages),
 			showForkedParentSessions: this.settings.showForkedParentSessions ?? false,

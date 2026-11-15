@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiFileText, FiX } from "react-icons/fi";
 import type { UiState } from "../types";
@@ -13,7 +13,11 @@ export function SessionChangedFiles({ state }: { state: UiState }) {
 	const t = useT();
 	const [open, setOpen] = useState(false);
 	const anchor = useRef<HTMLButtonElement>(null);
-	const files = useMemo(() => collectSessionChangedFiles(state.messages, state.cwd), [state.messages, state.cwd]);
+	const messages = useDeferredValue(state.messages);
+	const files = useMemo(
+		() => (open ? collectSessionChangedFiles(messages, state.cwd) : []),
+		[open, messages, state.cwd],
+	);
 	useEffect(() => setOpen(false), [state.sessionId, state.cwd]);
 	return (
 		<>
@@ -27,7 +31,7 @@ export function SessionChangedFiles({ state }: { state: UiState }) {
 				title={t("sessionFiles.title")}
 			>
 				<FiFileText aria-hidden="true" />
-				<span>{t("sessionFiles.count", { count: files.length })}</span>
+				<span>{open ? t("sessionFiles.count", { count: files.length }) : t("sessionFiles.title")}</span>
 			</button>
 			{open && (
 				<SessionFilesPanel
@@ -54,7 +58,7 @@ function SessionFilesPanel({
 	onClose: () => void;
 }) {
 	const t = useT();
-	const { panelRef, style, measure } = useFloatingPanel({ anchor, side: "top", align: "left", onClose });
+	const { panelRef, style, measure } = useFloatingPanel({ anchor, side: "top", align: "right", onClose });
 	const zIndex = useOverlayZIndex();
 	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 	useEffect(() => {
@@ -107,6 +111,20 @@ function SessionFilesPanel({
 							<span className="session-files-path" title={file.path}>
 								{file.path}
 							</span>
+							{file.status === "present" && file.kind === "file" && (
+								<button
+									type="button"
+									className="session-files-preview"
+									onClick={(event) => {
+										event.preventDefault();
+										event.stopPropagation();
+										onClose();
+										openFilePreview({ path: file.path, name: file.path.split("/").pop() || file.path });
+									}}
+								>
+									{t("diffOpenFile")}
+								</button>
+							)}
 							<span>{t("sessionFiles.operations", { count: file.operations.length })}</span>
 							{(file.status !== "present" || file.kind === "dir") && (
 								<span className={`session-files-state ${file.status}`}>
@@ -118,18 +136,6 @@ function SessionFilesPanel({
 						</summary>
 						{expanded.has(file.path) && (
 							<div className="session-files-detail">
-								{file.status === "present" && file.kind === "file" && (
-									<button
-										type="button"
-										className="btn"
-										onClick={() => {
-											onClose();
-											openFilePreview({ path: file.path, name: file.path.split("/").pop() || file.path });
-										}}
-									>
-										{t("diffOpenFile")}
-									</button>
-								)}
 								{file.operations.map((op) => (
 									<div key={op.id} className="session-files-operation">
 										<div className="session-files-operation-label">

@@ -938,6 +938,7 @@ export function handleSettingsMessage(
 				goalModeEnabled: (msg as { goalModeEnabled?: boolean }).goalModeEnabled,
 				thinkingWrap: msg.thinkingWrap,
 				toolsWrap: msg.toolsWrap,
+				sessionChangedFilesEnabled: msg.sessionChangedFilesEnabled,
 				toolImagesEnabled: (msg as { toolImagesEnabled?: boolean }).toolImagesEnabled,
 				keepRecentMessages: (msg as { keepRecentMessages?: number }).keepRecentMessages,
 				reversePagination: (msg as { reversePagination?: boolean }).reversePagination,

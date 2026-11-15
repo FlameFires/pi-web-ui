@@ -408,6 +408,27 @@ export function buildHunksFromEdits(edits: Array<{ oldText?: string; newText?: s
 	};
 }
 
+/**
+ * hashline 系编辑工具（replace / replace_match / insert / copy / move / undo_last_change）
+ * 的结果 details 不带 path，只有 unified patch。从 `--- a/x` / `+++ b/x` 头里取目标路径。
+ */
+export function diffHeaderPath(details: unknown): string {
+	if (!details || typeof details !== "object") return "";
+	const record = details as Record<string, unknown>;
+	for (const key of ["patch", "diff"] as const) {
+		const text = typeof record[key] === "string" ? (record[key] as string) : "";
+		if (!text) continue;
+		for (const line of text.split("\n")) {
+			const match = /^(?:\+\+\+|---)\s+(?:[abciow]\/)?(.+)$/.exec(line);
+			if (!match) continue;
+			const candidate = match[1].trim();
+			if (!candidate || /^\/dev\/null$/i.test(candidate)) continue;
+			return candidate;
+		}
+	}
+	return "";
+}
+
 export function parseFileMutationArgs(
 	toolName: string,
 	argsText?: string,
@@ -454,6 +475,8 @@ export function parseFileMutationArgs(
 			}
 		}
 	}
+
+	if (!path) path = diffHeaderPath(details);
 
 	if (!path && output) {
 		const outMatch =

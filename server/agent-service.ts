@@ -8790,6 +8790,7 @@ export class ClientSession {
 		parallelReminderEnabled?: boolean;
 		thinkingWrap?: boolean;
 		toolsWrap?: boolean;
+		sessionChangedFilesEnabled?: boolean;
 		toolImagesEnabled?: boolean;
 		showForkedParentSessions?: boolean;
 		retainFinishedConversations?: boolean;

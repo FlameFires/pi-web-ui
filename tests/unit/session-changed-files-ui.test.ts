@@ -44,13 +44,13 @@ it("opens the file list, shows historical content and opens the current file", (
 	const open = vi.fn();
 	registerFilePreviewHost({ open });
 	render();
-	expect(container.textContent).toContain("1");
+	expect(document.querySelector(".session-files-panel")).toBeNull();
 	click(".session-files-trigger");
 	expect(document.querySelector(".session-files-panel")).not.toBeNull();
 	expect(document.querySelector("summary")?.textContent).toContain("docs/a.md");
 	click("summary");
 	expect(document.querySelector(".session-files-detail")?.textContent).toContain("Sample");
-	click(".session-files-detail > button");
+	click(".session-files-preview");
 	expect(open).toHaveBeenCalledWith({ path: "docs/a.md", name: "a.md" });
 	expect(document.querySelector(".session-files-panel")).toBeNull();
 });
@@ -102,5 +102,5 @@ it("shows deleted file as historical-only and hides current preview action", () 
 	click(".session-files-trigger");
 	click("summary");
 	expect(document.querySelector(".session-files-state")?.textContent).toContain("Deleted");
-	expect(document.querySelector(".session-files-detail > button")).toBeNull();
+	expect(document.querySelector(".session-files-preview")).toBeNull();
 });

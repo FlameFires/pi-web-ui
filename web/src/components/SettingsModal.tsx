@@ -606,6 +606,7 @@ interface SettingsPatch extends QuickAskPatch {
 	parallelReminderEnabled?: boolean;
 	thinkingWrap?: boolean;
 	toolsWrap?: boolean;
+	sessionChangedFilesEnabled?: boolean;
 	toolImagesEnabled?: boolean;
 	keepRecentMessages?: number;
 	reversePagination?: boolean;
@@ -4538,6 +4539,14 @@ function LoadedSettingsModal({
 										}}
 									/>
 								</FieldRow>
+								<ToggleRow
+									title={t("sessionFiles.setting")}
+									tip={t("sessionFiles.settingDesc")}
+									enabled={settings.sessionChangedFilesEnabled ?? true}
+									onToggle={() =>
+										setPartial({ sessionChangedFilesEnabled: !(settings.sessionChangedFilesEnabled ?? true) })
+									}
+								/>
 								<ToggleRow
 									title={t("reversePagination")}
 									tip={t("reversePaginationDesc")}

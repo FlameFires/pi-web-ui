@@ -1,5 +1,7 @@
 {
 	"reopenFilePreview": "恢复预览：{name}（{count} 个文件）",
+	"sessionFiles.setting": "会话改动文件",
+	"sessionFiles.settingDesc": "在状态栏显示本会话的文件改动、操作历史和差异。关闭后不计算改动列表。",
 	"filePreviewLoadFailed": "文件读取失败：{error}",
 	"sessionFiles.state.deleted": "已删除",
 	"sessionFiles.state.moved": "已移动",
@@ -9,7 +11,7 @@
 	"sessionFiles.title": "本会话文件改动",
 	"sessionFiles.count": "改动文件（{count}）",
 	"sessionFiles.operations": "{count} 次操作",
-	"sessionFiles.scope": "汇总已加载会话历史中成功的文件编辑，展开文件可查看操作记录。不包含终端脚本及其他会话的修改，也不代表 Git 净差异。",
+	"sessionFiles.scope": "汇总已加载会话中的文件操作；展开查看各次差异。包含可识别的终端删除和移动，不代表 Git 净差异。",
 	"sessionFiles.partial": "较早消息尚未加载。可在对话中加载更早历史，以补充文件改动记录。",
 	"sessionFiles.empty": "已加载历史中尚无成功的文件编辑记录。",
 	"sessionFiles.noDetail": "该操作未保留详细内容。",
