@@ -25,6 +25,18 @@ function client() {
 }
 
 describe("interrupted subagent recovery actions", () => {
+	it("resumes a main session in its original conversation after the active view changes", async () => {
+		const { session, resume } = client();
+		const original = session.convs.get("parent");
+		session.interruptedMainOffers.set("main:original", original);
+		session.activeId = "repo";
+		session.getLang = () => "en";
+		session.prompt = vi.fn().mockResolvedValue(undefined);
+		expect(await session.resumeInterruptedSubagent("main:original")).toEqual({ ok: true });
+		expect(session.prompt).toHaveBeenCalledWith(expect.any(String), undefined, false, original);
+		expect(resume).not.toHaveBeenCalled();
+		expect(await session.resumeInterruptedSubagent("main:original")).toEqual({ ok: false, error: "not_available" });
+	});
 	it("offers both tasks from the original parent and excludes another project", async () => {
 		const { session } = client();
 		const records = [

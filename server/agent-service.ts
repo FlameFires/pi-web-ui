@@ -1,5 +1,6 @@
 import "./patch-remote-catalog.js";
 import { applyQueueModesToSession } from "./queue-modes.js";
+import { markMainRun, settleMainRun, interruptedMainRun } from "./main-session-recovery.js";
 import { startTurnTiming, finishTurnTiming } from "./turn-timing.js";
 import { PendingQuestion, type QuestionResult } from "./pending-question.js";
 import { formatSubagentsCompletionNotice } from "./subagent-notify.js";
@@ -913,6 +914,38 @@ export class ClientSession {
 		return (this.subagentSpawnBudgetStore ??= new SubagentSpawnBudget());
 	}
 
+	private interruptedMainOffers = new Map<string, Conversation>();
+
+	private async trackMainRun(conv: Conversation, running: boolean): Promise<void> {
+		if (conv.isSubagent || conv.parentId || conv.subagentPrompt || conv.nativeCli) return;
+		if (!running && this.disposed) return;
+		const dataDir = (this.stateStore as ClientStateStore | undefined)?.dataDir;
+		const sessionFile = this.sessionFileOfConversation(conv);
+		if (!dataDir || !sessionFile) return;
+		if (running) await markMainRun(dataDir, { sessionFile, cwd: conv.cwd, title: conv.title || "Conversation" });
+		else await settleMainRun(dataDir, sessionFile);
+	}
+
+	private async recoverMainRun(conv: Conversation): Promise<void> {
+		if (conv.isSubagent || conv.parentId || conv.subagentPrompt || conv.nativeCli) return;
+		const dataDir = (this.stateStore as ClientStateStore | undefined)?.dataDir;
+		const sessionFile = this.sessionFileOfConversation(conv);
+		if (!dataDir || !sessionFile) return;
+		const marker = await interruptedMainRun(dataDir, sessionFile);
+		if (!marker || resolve(marker.cwd) !== resolve(conv.cwd)) return;
+		const runId = `main:${conversationIdentity(conv)}`;
+		if (this.interruptedMainOffers.has(runId)) return;
+		this.interruptedMainOffers.set(runId, conv);
+		const notice: ServerMessage = {
+			type: "notice",
+			level: "warning",
+			text: `服务重启，会话「${marker.title}」的运行被中断。可选择恢复。`,
+			textEn: `The restart interrupted "${marker.title}". You can choose to resume.`,
+			interruptedRuns: [{ runId, title: marker.title }],
+		};
+		if (this.sinks?.size === 0) this.pendingNotices.push(notice);
+		else this.emit(notice);
+	}
 	private subagentLedgerStore?: SubagentLedger;
 
 	/** 运行账本：dataDir 级单例，同一进程的多个 ClientSession 共用。 */
@@ -2093,6 +2126,31 @@ export class ClientSession {
 	}
 
 	async resumeInterruptedSubagent(runId: string): Promise<{ ok: boolean; error?: string }> {
+		if (runId.startsWith("main:")) {
+			const conv = this.interruptedMainOffers.get(runId);
+			if (!conv || this.convs.get(conv.id) !== conv) return { ok: false, error: "not_available" };
+			if (conv.promptInFlight || conv.session.isStreaming) return { ok: false, error: "running" };
+			if (this.resumingInterruptedSubagents.has(runId)) return { ok: false, error: "running" };
+			this.resumingInterruptedSubagents.add(runId);
+			try {
+				await this.prompt(
+					pick(
+						this.getLang(),
+						"继续完成服务重启前未完成的任务。先核对已有进度和工具结果，避免重复执行已完成的操作。",
+						"Continue the task interrupted by the service restart. Check existing progress and tool results before repeating completed actions.",
+					),
+					undefined,
+					false,
+					conv,
+				);
+				this.interruptedMainOffers.delete(runId);
+				return { ok: true };
+			} catch {
+				return { ok: false, error: "resume_failed" };
+			} finally {
+				this.resumingInterruptedSubagents.delete(runId);
+			}
+		}
 		const parentId = this.interruptedSubagentOffers.get(runId);
 		if (!parentId) return { ok: false, error: "not_available" };
 		if (this.resumingInterruptedSubagents.has(runId)) return { ok: false, error: "running" };
@@ -5365,6 +5423,7 @@ export class ClientSession {
 		this.startWidgetsTimer();
 		this.startStallTimer();
 		await this.recoverSubagentRuns(conv);
+		await this.recoverMainRun(conv);
 	}
 
 	private startWidgetsTimer(): void {
@@ -6010,6 +6069,7 @@ export class ClientSession {
 					conv.retryState = { attempt: 0, maxAttempts: 0, delayMs: 0, errorMessage };
 				} else {
 					conv.retryState = null;
+					void this.trackMainRun(conv, false).catch(() => {});
 					finishTurnTiming(conv);
 					conv.promptInFlight = false;
 					Object.assign(this.notificationTurn(conv), mobileNotificationOutcome(event.messages), { settled: true });
@@ -6213,6 +6273,7 @@ export class ClientSession {
 				break;
 			}
 			case "agent_start": {
+				void this.trackMainRun(conv, true).catch(() => {});
 				Object.assign(this.notificationTurn(conv), { settled: false, error: false, aborted: false });
 				startTurnTiming(conv);
 				conv.promptInFlight = false;
@@ -16148,6 +16209,11 @@ export class ClientSession {
 			conversationCommunication.close(conv);
 		}
 		this.disposed = true;
+		await Promise.all(
+			[...this.convs.values()]
+				.filter((conv) => conv.promptInFlight || conv.session.isStreaming)
+				.map((conv) => this.trackMainRun(conv, true).catch(() => {})),
+		);
 		for (const terminals of this.pendingCliManagers) terminals.killAll({ shutdown: true });
 		this.pendingCliManagers.clear();
 		this.mcpOAuthUi.dispose();
