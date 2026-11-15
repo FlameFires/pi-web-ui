@@ -10,7 +10,12 @@ function client() {
 		activeId: "parent",
 		interruptedSubagentOffers: new Map(),
 		resumingInterruptedSubagents: new Set(),
-		subagentLedgerStore: { enabled: true, recover: vi.fn().mockResolvedValue(records), read: vi.fn(() => records[0]) },
+		subagentLedgerStore: {
+			enabled: true,
+			recover: vi.fn().mockResolvedValue(records),
+			list: vi.fn(() => records),
+			read: vi.fn(() => records[0]),
+		},
 		resumeSubagentRun: resume,
 		sinks: new Set([{}]),
 		emit: vi.fn(),
@@ -19,6 +24,29 @@ function client() {
 }
 
 describe("interrupted subagent recovery actions", () => {
+	it("offers previously interrupted tasks even when this boot recovered no new runs", async () => {
+		const { session, resume } = client();
+		session.subagentLedgerStore.recover.mockResolvedValue([]);
+		await session.recoverSubagentRuns();
+		expect(session.emit).toHaveBeenCalledWith(
+			expect.objectContaining({ interruptedRuns: [{ runId: "old-run", title: "Interrupted task" }] }),
+		);
+		expect(resume).not.toHaveBeenCalled();
+	});
+	it("does not offer interrupted tasks already resumed elsewhere", async () => {
+		const { session, records } = client();
+		Object.assign(records[0], { resumedBy: "replacement" });
+		await session.recoverSubagentRuns();
+		expect(session.emit).not.toHaveBeenCalled();
+	});
+	it("queues recovery for the first browser attachment", async () => {
+		const { session } = client();
+		session.sinks.clear();
+		await session.recoverSubagentRuns();
+		expect(session.pendingNotices).toEqual([
+			expect.objectContaining({ interruptedRuns: [{ runId: "old-run", title: "Interrupted task" }] }),
+		]);
+	});
 	it("keeps an actionable recovery notice when ordinary notifications arrive", () => {
 		const recovery = { id: 1, level: "warning" as const, text: "Recovery", interruptedRuns: [{ runId: "old-run" }] };
 		const error = { id: 2, level: "error" as const, text: "Error" };

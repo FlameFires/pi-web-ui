@@ -2113,7 +2113,8 @@ export class ClientSession {
 	async recoverSubagentRuns(): Promise<void> {
 		const ledger = this.subagentLedger;
 		if (!ledger.enabled) return;
-		const recovered = await ledger.recover();
+		await ledger.recover();
+		const recovered = ledger.list().filter((record) => record.state === "interrupted" && !record.resumedBy);
 		if (recovered.length === 0) return;
 		for (const record of recovered) this.interruptedSubagentOffers.set(record.runId, this.activeId);
 		const notice: ServerMessage = {
