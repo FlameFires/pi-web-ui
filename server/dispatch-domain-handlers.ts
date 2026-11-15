@@ -10,6 +10,9 @@ import { prepareNativeCliPaste, type NativeCliPasteContext } from "./native-cli.
 
 export function handleFileMessage(msg: ClientMessage, cs: DispatchSession): boolean {
 	switch (msg.type) {
+		case "session_file_ledger":
+			void cs.sessionFileLedger?.(msg);
+			return true;
 		case "list_files":
 			void cs.listFiles(msg.path);
 			return true;

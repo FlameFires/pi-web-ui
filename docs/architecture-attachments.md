@@ -109,9 +109,15 @@
 
 ## 会话改动文件
 
-底部状态栏的「改动文件」入口汇总当前会话已加载历史中成功完成的文件编辑操作，按路径去重并展示操作次数。展开文件可查看保留的操作记录，普通 edit/write 复用文件 diff 卡片；patch 展示结果记录，支持多文件、删除和移动。已删除或移走的路径不提供当前文件预览入口。
+状态栏右侧「改动文件」入口查询服务端持久账本，不依赖 `UiState.messages` 或聊天历史分页。协议单源为 `server/protocol.ts`：`session_file_ledger` 请求携带 `conversationId + sessionFile + cwd + reqId`，服务端核对原会话身份后返回 `session_file_ledger_page`；成功写入发布轻量 `session_file_ledger_changed` 事件，前端只在面板挂载期间按事件刷新，不轮询、不把账本加入快照。摘要与每文件操作历史分别分页，稳定 cursor 绑定会话和文件；大操作原文与累计差异再按字符偏移分页，每次 4096 字符，响应受 48KiB 预算限制。
 
-数据来源是 `UiState.messages` 的 toolCall/toolResult 对应关系，纯函数位于 `web/src/session-changed-files.ts`，入口与浮层位于 `web/src/components/SessionChangedFiles.tsx`。不使用 Git 工作区状态或目录监听推断会话归属，不覆盖终端脚本、codemode 内部调用、子代理或其他会话的修改；操作记录也不等于最终 Git 净差异。失败、未完成和明确无改动的操作不计入。界面随会话切换、历史加载及回退重新计算，提交文件不会主动清空历史记录。较早消息未加载时显式提示范围不完整，已压缩或截断且无法恢复路径的记录不能统计。
+`server/session-file-ledger.ts` 按会话文件与 cwd 哈希保存到 `<dataDir>/session-file-ledger/`，每文件保留最终状态、操作次数、逐次工具参数/结果和独立全文证据。成功工具完成才追加，以工具调用 ID 去重；失败、明确 noop 和已证实无变化的 write/edit 不计入。写入经同会话串行队列与可重放 `pending.json` 事务，原子写使用 `atomic-file.ts`，提交去重标记最后写入；重启首次查询或追加先重放残缺事务。纯解析单源为 `server/session-file-changes.ts`，保留可识别 Bash 删除、移动及 patch 多文件结果。不扫描 Git 或整个工作区，不声称能还原任意 Shell 写入。
+
+write/edit 的执行包装器在实际调用前后仅读取明确目标，各限 256KiB，UTF-8 文本才保存全文证据。首次 before 与最新 after 可用时显示真实累计差异；创建以已观测不存在为基线，内容回到基线时显示无净改动。旧转录、Bash、二进制、超限或缺失证据显示累计不可用，各次 patch 仅代表其覆盖范围。原始操作最多 2MiB，超限保留明确降级记录；列表页最多 30 项，操作展示超过 24KiB 时改为按需读取原文。
+
+首次查询在后台使用 `sessionLines()` 流式回填可用磁盘转录，扫描操作事实并保留被回退分支，按工具调用去重；完成标记避免反复扫描。参数暂存限 256 项/8MiB，跳过超限或损坏证据时持久记录 partial coverage，不能称作完整历史。设置 `sessionChangedFilesEnabled` 默认开启；关闭不挂载面板、不读取、不计算新增记录，正在回填在下一条记录处退出。再次开启可导入尚未完成回填的可用转录；已经完成回填后关闭期间的记录不保证补齐，界面始终说明此范围。
+
+验证：`tests/unit/session-file-ledger.test.ts` 与 `tests/unit/session-changed-files.test.ts`。
 
 ## 文件预览协议
 

@@ -1,4 +1,7 @@
 import "./patch-remote-catalog.js";
+import { SessionFileLedger } from "./session-file-ledger.js";
+import { captureFileEvidence } from "./session-file-evidence.js";
+import type { SessionFileLedgerIdentity } from "./protocol.js";
 import { applyQueueModesToSession } from "./queue-modes.js";
 import { markMainRun, settleMainRun, interruptedMainRun } from "./main-session-recovery.js";
 import { startTurnTiming, finishTurnTiming } from "./turn-timing.js";
@@ -891,6 +894,50 @@ export class ClientSession {
 	private readonly agentDir: string;
 	private readonly stateStore: ClientStateStore;
 	private convs = new Map<string, Conversation>();
+	private fileLedgerTools = new WeakMap<Conversation, Map<string, SessionFileLedgerIdentity>>();
+	private fileLedgerBackfills = new Map<string, Promise<void>>();
+
+	async sessionFileLedger(
+		request: Extract<import("./protocol.js").ClientMessage, { type: "session_file_ledger" }>,
+	): Promise<void> {
+		const conv = this.convs.get(request.conversationId);
+		if (!conv || this.sessionFileOfConversation(conv) !== request.sessionFile || conv.cwd !== request.cwd) return;
+		if (this.settingsSvc.current.sessionChangedFilesEnabled === false || !this.stateStore?.dataDir) return;
+		const identity = { conversationId: conv.id, sessionFile: request.sessionFile, cwd: conv.cwd };
+		const ledger = new SessionFileLedger(this.stateStore.dataDir, identity);
+		try {
+			if (!this.fileLedgerBackfills.has(ledger.directory)) {
+				const task = ledger
+					.backfill(() => this.settingsSvc.current.sessionChangedFilesEnabled !== false)
+					.then((changed) => {
+						if (changed) this.emit({ type: "session_file_ledger_changed", ...identity });
+					})
+					.catch((error) => {
+						this.emitNotice(
+							"warning",
+							`文件账本回填失败：${String(error)}`,
+							`File ledger backfill failed: ${String(error)}`,
+						);
+					})
+					.finally(() => this.fileLedgerBackfills.delete(ledger.directory));
+				this.fileLedgerBackfills.set(ledger.directory, task);
+			}
+			const page = await ledger.page(request.reqId, request.path, request.cursor, request);
+			this.emit({ type: "session_file_ledger_page", ...page });
+		} catch (error) {
+			this.emit({
+				type: "session_file_ledger_page",
+				...identity,
+				reqId: request.reqId,
+				path: request.path,
+				files: [],
+				operations: [],
+				coverage: "recorded-only",
+				cumulative: { status: "unavailable", reason: "Ledger query failed" },
+				error: String(error),
+			});
+		}
+	}
 	private activeId = "";
 	private interruptedSubagentOffers = new Map<string, string>();
 	private resumingInterruptedSubagents = new Set<string>();
@@ -5908,8 +5955,14 @@ export class ClientSession {
 				if (event.toolName === "bash") {
 					this.bg.snapshotBefore();
 				}
-				if (event.toolName === "update_plan") {
+				if (event.toolName === "update_plan" || this.settingsSvc.current.sessionChangedFilesEnabled !== false) {
 					conv.toolPendingArgs.set(event.toolCallId, event.args);
+				}
+				const sessionFile = this.sessionFileOfConversation(conv);
+				if (sessionFile && this.settingsSvc.current.sessionChangedFilesEnabled !== false) {
+					let tools = this.fileLedgerTools.get(conv);
+					if (!tools) this.fileLedgerTools.set(conv, (tools = new Map()));
+					tools.set(event.toolCallId, { conversationId: conv.id, sessionFile, cwd: conv.cwd });
 				}
 				if (event.toolName !== ASK_USER_QUESTION_TOOL_NAME) {
 					this.armToolWatchdog(conv, event.toolCallId, event.toolName, event.args);
@@ -5941,6 +5994,51 @@ export class ClientSession {
 				this.clearToolWatchdog(conv, event.toolCallId);
 				const pendingArgs = conv.toolPendingArgs.get(event.toolCallId);
 				conv.toolPendingArgs.delete(event.toolCallId);
+				const ledgerIdentity = this.fileLedgerTools.get(conv)?.get(event.toolCallId);
+				this.fileLedgerTools.get(conv)?.delete(event.toolCallId);
+				if (
+					ledgerIdentity &&
+					!event.isError &&
+					this.settingsSvc.current.sessionChangedFilesEnabled !== false &&
+					this.stateStore?.dataDir
+				) {
+					const ledger = new SessionFileLedger(this.stateStore.dataDir, ledgerIdentity);
+					const result = event.result as { content?: UiMessage["content"]; details?: unknown };
+					void ledger
+						.append([
+							{
+								id: event.toolCallId,
+								role: "assistant",
+								content: [
+									{
+										type: "toolCall",
+										id: event.toolCallId,
+										name: event.toolName,
+										argumentsText: JSON.stringify(pendingArgs ?? {}),
+									},
+								],
+							},
+							{
+								id: event.toolCallId,
+								role: "toolResult",
+								toolCallId: event.toolCallId,
+								toolName: event.toolName,
+								content: result.content ?? [],
+								details: result.details,
+								timestamp: Date.now(),
+							},
+						])
+						.then((changed) => {
+							if (changed) this.emit({ type: "session_file_ledger_changed", ...ledgerIdentity });
+						})
+						.catch((error) => {
+							this.emitNotice(
+								"warning",
+								`文件账本写入失败：${String(error)}`,
+								`File ledger write failed: ${String(error)}`,
+							);
+						});
+				}
 				if (!event.isError && event.toolName === "update_plan" && pendingArgs) {
 					this.syncSolUpdatePlan(conv, pendingArgs);
 				}
@@ -9573,7 +9671,7 @@ export class ClientSession {
 						withDelegationGate(
 							withPlanModeGate(
 								withSandboxJailGate(
-									def,
+									this.withFileLedger(def, ownerId, cwd, anchor),
 									() => this.sandboxes.getExecutionIdentity(cwd, sandboxIdentity),
 									() => cwd,
 									() => this.getLang(),
@@ -10353,6 +10451,75 @@ export class ClientSession {
 		this.flushSnapshot();
 	}
 
+	private withFileLedger(
+		def: ToolDefinition,
+		ownerId?: string,
+		cwd?: string,
+		anchor?: { session?: AgentSession },
+	): ToolDefinition {
+		if (!["write", "edit"].includes(def.name)) return def;
+		const execute = def.execute;
+		return {
+			...def,
+			execute: async (...args) => {
+				const home = anchor?.session ? this.toolConversationHome(anchor.session) : undefined;
+				const client = home?.client ?? this;
+				const conv = home?.conv ?? (ownerId ? client.convs.get(ownerId) : undefined);
+				const sessionFile = conv ? client.sessionFileOfConversation(conv) : undefined;
+				const params = args[1] as Record<string, unknown>;
+				const path = params.path ?? params.file_path;
+				if (
+					!conv ||
+					!sessionFile ||
+					!client.stateStore?.dataDir ||
+					client.settingsSvc.current.sessionChangedFilesEnabled === false ||
+					typeof path !== "string" ||
+					isRemoteWorkspaceUri(conv.cwd)
+				)
+					return execute(...args);
+				const identity = { conversationId: conv.id, sessionFile, cwd: conv.cwd };
+				const absolute = resolve(cwd ?? conv.cwd, path);
+				const before = await captureFileEvidence(absolute);
+				args[2]?.throwIfAborted();
+				const result = await execute(...args);
+				if ((client.settingsSvc.current.sessionChangedFilesEnabled as boolean | undefined) !== false) {
+					const after = await captureFileEvidence(absolute);
+					const ledger = new SessionFileLedger(client.stateStore.dataDir, identity);
+					try {
+						const changed = await ledger.append(
+							[
+								{
+									id: args[0],
+									role: "assistant",
+									content: [{ type: "toolCall", id: args[0], name: def.name, argumentsText: JSON.stringify(params) }],
+								},
+								{
+									id: args[0],
+									role: "toolResult",
+									toolCallId: args[0],
+									toolName: def.name,
+									content: result.content as UiMessage["content"],
+									details: result.details,
+									isError: (result as { isError?: boolean }).isError,
+									timestamp: Date.now(),
+								},
+							],
+							{ before, after },
+						);
+						if (changed) client.emit({ type: "session_file_ledger_changed", ...identity });
+					} catch (error) {
+						client.emitNotice(
+							"warning",
+							`文件账本写入失败：${String(error)}`,
+							`File ledger write failed: ${String(error)}`,
+						);
+					}
+				}
+				client.fileLedgerTools.get(conv)?.delete(args[0]);
+				return result;
+			},
+		};
+	}
 	private wrapGenericTool(
 		def: ToolDefinition,
 		ownerId?: string,
@@ -10390,7 +10557,7 @@ export class ClientSession {
 				withDelegationGate(
 					withPlanModeGate(
 						withSandboxJailGate(
-							withApprovalGate(def, {
+							withApprovalGate(this.withFileLedger(def, ownerId, cwdOverride), {
 								cwd: getEffectiveCwd,
 								getRoots: () => this.roots,
 								getRules: () => this.approvalRules.list(),
