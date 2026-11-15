@@ -154,6 +154,7 @@ import {
 } from "react-icons/fi";
 import { LuFlaskConical } from "react-icons/lu";
 import type { Notice } from "./use-chat";
+import { InterruptedRunActions } from "./components/InterruptedRunActions";
 import { fileToProcessedImage, isRasterImage, type ProcessedImage } from "./image-paste";
 import { randomUuid } from "./uuid";
 import { recordModelUsage } from "./model-usage";
@@ -215,10 +216,10 @@ function NoticeToast({ notice, onDismiss }: { notice: Notice; onDismiss: (id: nu
 	const text = !isZhLocale(locale) && notice.textEn ? notice.textEn : notice.text;
 	const [paused, setPaused] = useState(false);
 	useEffect(() => {
-		if (paused) return;
+		if (paused || notice.interruptedRuns?.length) return;
 		const timer = setTimeout(() => onDismiss(notice.id), getNoticeDurationMs(notice.level));
 		return () => clearTimeout(timer);
-	}, [paused, notice.id, notice.level, onDismiss]);
+	}, [paused, notice.id, notice.level, notice.interruptedRuns, onDismiss]);
 	const Icon = notice.level === "error" ? FiAlertCircle : notice.level === "warning" ? FiAlertTriangle : FiInfo;
 	return (
 		<div
@@ -227,12 +228,16 @@ function NoticeToast({ notice, onDismiss }: { notice: Notice; onDismiss: (id: nu
 			onMouseEnter={() => setPaused(true)}
 			onMouseLeave={() => setPaused(false)}
 			onClick={() => {
+				if (notice.interruptedRuns?.length) return;
 				if (window.getSelection?.()?.toString()) return;
 				onDismiss(notice.id);
 			}}
 		>
 			<Icon className="notice-icon" />
-			<span className="notice-text">{text}</span>
+			<div className="notice-text">
+				{text}
+				{notice.interruptedRuns?.length ? <InterruptedRunActions runs={notice.interruptedRuns} /> : null}
+			</div>
 			<button
 				type="button"
 				className="notice-close"

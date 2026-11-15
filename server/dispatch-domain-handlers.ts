@@ -625,6 +625,14 @@ export function handleSessionLifecycleMessage(
 	clientId?: string,
 ): boolean {
 	switch (msg.type) {
+		case "resume_interrupted_subagent": {
+			if (!cs.resumeInterruptedSubagent || !send) return true;
+			void cs.resumeInterruptedSubagent(msg.runId).then(
+				(result) => send({ type: "subagent_resume_result", runId: msg.runId, ...result }),
+				() => send({ type: "subagent_resume_result", runId: msg.runId, ok: false, error: "resume_failed" }),
+			);
+			return true;
+		}
 		case "new_chat":
 		case "new_cli_chat": {
 			let acknowledged = false;

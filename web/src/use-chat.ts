@@ -140,6 +140,7 @@ export interface Notice {
 	level: "info" | "warning" | "error";
 	text: string;
 	textEn?: string;
+	interruptedRuns?: { runId: string; title: string; resumed?: boolean; error?: string }[];
 }
 
 export interface TerminalMeta extends TerminalInfo {
@@ -485,6 +486,7 @@ type Action =
 	| { type: "message_delta"; msg: MessageDeltaMsg }
 	| { type: "tool_status"; status: ToolStatus }
 	| { type: "notice"; notice: Notice }
+	| { type: "subagent_resume_result"; runId: string; ok: boolean; error?: string }
 	| { type: "dismiss_notice"; id: number }
 	| {
 			type: "ready";
@@ -1055,6 +1057,22 @@ export function reducer(state: ChatState, action: Action): ChatState {
 			return {
 				...state,
 				toolStatuses: new Map(state.toolStatuses).set(action.status.toolCallId, action.status),
+			};
+		case "subagent_resume_result":
+			return {
+				...state,
+				notices: state.notices.map((notice) =>
+					notice.interruptedRuns
+						? {
+								...notice,
+								interruptedRuns: notice.interruptedRuns.map((run) =>
+									run.runId === action.runId
+										? { ...run, resumed: action.ok, error: action.ok ? undefined : (action.error ?? "resume_failed") }
+										: run,
+								),
+							}
+						: notice,
+				),
 			};
 		case "notice": {
 			const nextNotices = enqueueNotice(state.notices, action.notice);
@@ -2351,6 +2369,9 @@ export function useChat() {
 				case "subagent_handoff": {
 					break;
 				}
+				case "subagent_resume_result":
+					dispatch(msg);
+					break;
 				case "notice": {
 					const id = ++noticeId.current;
 					if (msg.level === "error" || msg.level === "warning") {
@@ -2358,7 +2379,7 @@ export function useChat() {
 					}
 					dispatch({
 						type: "notice",
-						notice: { id, level: msg.level, text: msg.text, textEn: msg.textEn },
+						notice: { id, level: msg.level, text: msg.text, textEn: msg.textEn, interruptedRuns: msg.interruptedRuns },
 					});
 					break;
 				}

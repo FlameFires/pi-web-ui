@@ -1,4 +1,10 @@
 {
+	"restartRecovery.resume": "Resume",
+	"restartRecovery.resumeAll": "Resume all",
+	"restartRecovery.resuming": "Resuming…",
+	"restartRecovery.resumed": "Resumed",
+	"restartRecovery.retry": "Retry",
+	"restartRecovery.failed": "Could not resume. Try again.",
 	"reopenFilePreview": "Preview: {name} ({count})",
 	"sessionFiles.setting": "Session file changes",
 	"sessionFiles.settingDesc": "Show this conversation’s file changes, history and diffs in the status bar. Disabling skips change collection.",
