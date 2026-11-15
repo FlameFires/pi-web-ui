@@ -8932,14 +8932,14 @@
 		gap: 4px;
 		min-width: 0;
 		max-width: min(240px, 40vw);
-		padding: 2px 4px;
+		padding: 0 4px;
 		border: 0;
 		border-radius: 3px;
 		background: transparent;
 		color: var(--text-faint);
 		font: inherit;
 		height: 18px;
-		line-height: 1;
+		line-height: 18px;
 		justify-content: center;
 		cursor: pointer;
 	}
@@ -8950,6 +8950,13 @@
 	.statusbar-preview:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 1px;
+	}
+	.statusbar-preview svg,
+	.session-files-trigger svg {
+		display: block;
+		width: 11px;
+		height: 11px;
+		flex: none;
 	}
 	.statusbar-preview svg {
 		flex-shrink: 0;
@@ -8966,14 +8973,14 @@
 		align-items: center;
 		gap: 4px;
 		flex-shrink: 0;
-		padding: 2px 4px;
+		padding: 0 4px;
 		border: 0;
 		border-radius: 3px;
 		background: transparent;
 		color: var(--text-faint);
 		font: inherit;
 		height: 18px;
-		line-height: 1;
+		line-height: 18px;
 		justify-content: center;
 		cursor: pointer;
 	}
