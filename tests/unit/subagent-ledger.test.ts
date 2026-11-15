@@ -55,6 +55,22 @@ describe("SubagentLedger", () => {
 		rmSync(dir, { recursive: true, force: true });
 	});
 
+	it("does not consume another parent's interrupted tasks", async () => {
+		const dir = dataDir();
+		const ledger = new SubagentLedger(dir);
+		ledger.upsert(record({ runId: "self-one", bootId: "old", parentSessionFile: "self" }));
+		ledger.upsert(record({ runId: "self-two", bootId: "old", parentSessionFile: "self" }));
+		ledger.upsert(record({ runId: "repo", bootId: "old", parentSessionFile: "repo" }));
+		await ledger.flush();
+		expect((await ledger.recover((r) => r.parentSessionFile === "repo")).map((r) => r.runId)).toEqual(["repo"]);
+		expect(ledger.read("self-one")?.state).toBe("running");
+		expect((await ledger.recover((r) => r.parentSessionFile === "self")).map((r) => r.runId)).toEqual([
+			"self-one",
+			"self-two",
+		]);
+		expect(await ledger.recover((r) => r.parentSessionFile === "self")).toEqual([]);
+		rmSync(dir, { recursive: true, force: true });
+	});
 	it("recover 只把别的 boot 留下的 running 判成 interrupted", async () => {
 		const dir = dataDir();
 		const ledger = new SubagentLedger(dir);

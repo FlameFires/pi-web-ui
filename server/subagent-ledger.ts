@@ -370,12 +370,13 @@ export class SubagentLedger {
 	}
 
 	/** 重启对账：别的 boot 留下的 running 一律判 interrupted（本 boot 的活运行不动）。 */
-	async recover(): Promise<LedgerRunRecord[]> {
+	async recover(matches: (record: LedgerRunRecord) => boolean = () => true): Promise<LedgerRunRecord[]> {
 		if (!this.enabled) return [];
 		await this.ready();
 		const recovered: LedgerRunRecord[] = [];
 		for (const record of [...this.records.values()]) {
 			if (record.state !== "running" || record.bootId === BOOT_ID) continue;
+			if (!matches(record)) continue;
 			const next: LedgerRunRecord = { ...record, state: "interrupted", updatedAt: this.now() };
 			this.records.set(next.runId, next);
 			recovered.push(next);

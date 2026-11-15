@@ -2110,13 +2110,19 @@ export class ClientSession {
 		}
 	}
 	/** 启动对账：把上一次进程留下的 running 标成 interrupted，并提示可以续跑。 */
-	async recoverSubagentRuns(): Promise<void> {
+	async recoverSubagentRuns(parent: Conversation = this.conv): Promise<void> {
 		const ledger = this.subagentLedger;
 		if (!ledger.enabled) return;
-		const recovered = await ledger.recover();
+		const parentFile = this.sessionFileOfConversation(parent);
+		const parentRunId = conversationIdentity(parent);
+		const recovered = await ledger.recover((record) => {
+			if (record.resumedBy) return false;
+			if (record.parentSessionFile && parentFile) return resolve(record.parentSessionFile) === resolve(parentFile);
+			return record.parentRunId === parentRunId;
+		});
 
 		if (recovered.length === 0) return;
-		for (const record of recovered) this.interruptedSubagentOffers.set(record.runId, this.activeId);
+		for (const record of recovered) this.interruptedSubagentOffers.set(record.runId, parent.id);
 		const notice: ServerMessage = {
 			type: "notice",
 			level: "warning",
@@ -4144,7 +4150,6 @@ export class ClientSession {
 			);
 		}
 		await cs.bindSession();
-		void cs.recoverSubagentRuns().catch(() => {});
 		const globalDefault = stateStore.getDefaultModel();
 		if (globalDefault) {
 			const slash = globalDefault.indexOf("/");
@@ -5359,6 +5364,7 @@ export class ClientSession {
 		this.webUi.refresh();
 		this.startWidgetsTimer();
 		this.startStallTimer();
+		await this.recoverSubagentRuns(conv);
 	}
 
 	private startWidgetsTimer(): void {
