@@ -9,6 +9,13 @@ import {
 } from "../../web/src/file-diff";
 
 describe("file-diff parser & model", () => {
+	it("renders anchor tool diffs using returned path metadata", () => {
+		for (const tool of ["replace", "replace_match", "insert", "copy", "move", "undo_last_change"]) {
+			const data = parseFileMutationArgs(tool, "{}", { path: "src/example.ts", diff: "@@ -1 +1 @@\n-old\n+new" });
+			expect(data?.filePath).toBe("src/example.ts");
+			expect(data?.hunks[0].lines.map((line) => line.type)).toEqual(["del", "add"]);
+		}
+	});
 	it("detectLanguage handles common file extensions", () => {
 		expect(detectLanguage("src/app.tsx")).toBe("tsx");
 		expect(detectLanguage("src/server.ts")).toBe("typescript");

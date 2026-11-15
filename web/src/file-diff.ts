@@ -415,7 +415,16 @@ export function parseFileMutationArgs(
 	output?: string,
 ): FileDiffData | null {
 	const isWrite = toolName === "write";
-	const isEdit = toolName === "edit" || toolName === "patch";
+	const isEdit = new Set([
+		"edit",
+		"patch",
+		"replace",
+		"replace_match",
+		"insert",
+		"copy",
+		"move",
+		"undo_last_change",
+	]).has(toolName);
 
 	if (!isWrite && !isEdit) {
 		return null;
@@ -454,6 +463,9 @@ export function parseFileMutationArgs(
 		}
 	}
 
+	if (!path && details && typeof details === "object" && typeof (details as { path?: unknown }).path === "string") {
+		path = (details as { path: string }).path;
+	}
 	const language = detectLanguage(path);
 
 	if (isWrite) {
