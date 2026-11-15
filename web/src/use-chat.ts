@@ -1061,18 +1061,20 @@ export function reducer(state: ChatState, action: Action): ChatState {
 		case "subagent_resume_result":
 			return {
 				...state,
-				notices: state.notices.map((notice) =>
-					notice.interruptedRuns
-						? {
-								...notice,
-								interruptedRuns: notice.interruptedRuns.map((run) =>
-									run.runId === action.runId
-										? { ...run, resumed: action.ok, error: action.ok ? undefined : (action.error ?? "resume_failed") }
-										: run,
-								),
-							}
-						: notice,
-				),
+				notices: state.notices
+					.map((notice) =>
+						notice.interruptedRuns
+							? {
+									...notice,
+									interruptedRuns: notice.interruptedRuns.map((run) =>
+										run.runId === action.runId
+											? { ...run, resumed: action.ok, error: action.ok ? undefined : (action.error ?? "resume_failed") }
+											: run,
+									),
+								}
+							: notice,
+					)
+					.filter((notice) => !notice.interruptedRuns?.every((run) => run.resumed)),
 			};
 		case "notice": {
 			const nextNotices = enqueueNotice(state.notices, action.notice);

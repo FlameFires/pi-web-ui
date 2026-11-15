@@ -2152,16 +2152,19 @@ export class ClientSession {
 					children.length === 0
 						? ""
 						: `\n\nThe following child tasks of THIS conversation were interrupted by the restart. Inspect their recorded progress, then resume unfinished tasks using conversation(action="resume", runId=...). Do not spawn duplicate tasks or resume completed tasks. Keep all work in the original project.\n${JSON.stringify(children.map((record) => ({ runId: record.runId, title: record.title, cwd: record.cwd, outputTail: record.outputTail, sessionFile: record.sessionFile })))}`;
-				await this.prompt(
-					pick(
-						this.getLang(),
-						"继续完成服务重启前未完成的任务。先核对已有进度和工具结果，避免重复执行已完成的操作。",
-						"Continue the task interrupted by the service restart. Check existing progress and tool results before repeating completed actions.",
-					) + recoveryContext,
-					undefined,
-					false,
-					conv,
-				);
+				await new Promise<void>((resolveStarted, rejectStart) => {
+					void this.prompt(
+						pick(
+							this.getLang(),
+							"继续完成服务重启前未完成的任务。先核对已有进度和工具结果，避免重复执行已完成的操作。",
+							"Continue the task interrupted by the service restart. Check existing progress and tool results before repeating completed actions.",
+						) + recoveryContext,
+						undefined,
+						false,
+						conv,
+						resolveStarted,
+					).then(resolveStarted, rejectStart);
+				});
 				this.interruptedMainOffers.delete(runId);
 				return { ok: true };
 			} catch {
@@ -10773,6 +10776,7 @@ export class ClientSession {
 		attachments?: PromptAttachment[],
 		queue = false,
 		targetConversation?: Conversation,
+		onStarted?: () => void,
 	): Promise<void> {
 		this.botExecution?.assertActive();
 		if (this.botExecution && text.trimStart().startsWith("/")) throw new Error("Bot slash commands are disabled");
@@ -11136,6 +11140,7 @@ export class ClientSession {
 			}
 			startTurnTiming(conv);
 			conv.promptInFlight = true;
+			onStarted?.();
 			this.notificationTurn(conv);
 			conv.viewOnly = false;
 			this.flushSnapshot();
