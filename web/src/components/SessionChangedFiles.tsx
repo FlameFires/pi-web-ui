@@ -145,7 +145,7 @@ function SessionFilesPanel({
 													)
 												: op.toolName}
 										</div>
-										{op.toolName === "edit" || op.toolName === "write" ? (
+										{op.toolName !== "bash" ? (
 											<FileChangeCard
 												toolName={op.toolName}
 												argumentsText={op.argumentsText}
