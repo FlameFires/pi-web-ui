@@ -125,13 +125,13 @@ it("pages persisted files independently of loaded chat history and reports ledge
 	render("one", 40);
 	click(".session-files-trigger");
 	reply(latestRequest(), { nextCursor: "files-page-2", coverage: "recorded-only" });
-	expect(document.querySelectorAll(".session-files-note")).toHaveLength(2);
+	expect(document.querySelector(".session-files-help")?.getAttribute("title")).toContain("\n");
 	expect(document.querySelector("summary")?.textContent).toContain(file.path);
 	const count = requests.length;
 	render("one", 0, messages);
 	expect(requests).toHaveLength(count);
-	expect(document.querySelectorAll(".session-files-note")).toHaveLength(2);
-	const next = [...document.querySelectorAll<HTMLButtonElement>(".session-files-panel > button")].find(
+	expect(document.querySelector(".session-files-help")?.getAttribute("title")).toContain("\n");
+	const next = [...document.querySelectorAll<HTMLButtonElement>(".session-files-pager-btn")].find(
 		(button) => button.textContent === "Next page",
 	);
 	expect(next).toBeDefined();
@@ -140,7 +140,7 @@ it("pages persisted files independently of loaded chat history and reports ledge
 	reply(latestRequest(), { files: [{ ...file, path: "docs/second.md" }], coverage: "available-transcript" });
 	expect(document.querySelector("summary")?.textContent).toContain("docs/second.md");
 	expect(document.querySelector("summary")?.textContent).not.toContain(file.path);
-	expect(document.querySelectorAll(".session-files-note")).toHaveLength(1);
+	expect(document.querySelector(".session-files-help")?.getAttribute("title")).not.toContain("\n");
 	render("one", 80);
 	expect(requests).toHaveLength(count + 1);
 	expect(document.querySelector("summary")?.textContent).toContain("docs/second.md");

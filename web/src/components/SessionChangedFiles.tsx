@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FiFileText, FiX } from "react-icons/fi";
+import { FiFileText, FiHelpCircle, FiRefreshCw, FiX } from "react-icons/fi";
 import type { UiState } from "../types";
 import { useT } from "../i18n";
 import { useFloatingPanel } from "../use-floating-panel";
@@ -62,6 +62,7 @@ function SessionFilesPanel({
 	const { panelRef, style, measure } = useFloatingPanel({ anchor, side: "top", align: "right", onClose });
 	const zIndex = useOverlayZIndex();
 	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+	const help = partial ? `${t("sessionFiles.scope")}\n${t("sessionFiles.partial")}` : t("sessionFiles.scope");
 	useEffect(() => {
 		panelRef.current?.focus({ preventScroll: true });
 		return () => {
@@ -85,12 +86,13 @@ function SessionFilesPanel({
 		>
 			<div className="session-files-heading cwd-picker-head">
 				<strong>{t("sessionFiles.title")}</strong>
+				<span className="session-files-help" title={help} aria-label={help} role="img" tabIndex={0}>
+					<FiHelpCircle aria-hidden="true" />
+				</span>
 				<button type="button" className="file-diff-action-btn cwd-close" onClick={onClose} aria-label={t("close")}>
 					<FiX />
 				</button>
 			</div>
-			<p className="session-files-note">{t("sessionFiles.scope")}</p>
-			{partial && <p className="session-files-note">{t("sessionFiles.partial")}</p>}
 			{!files.length && <p className="session-files-empty">{t("sessionFiles.empty")}</p>}
 			<div className="session-files-list">
 				{files.map((file) => (
@@ -190,14 +192,28 @@ function SessionFilesPanel({
 				))}
 			</div>
 			{ledger.error && <p className="session-files-note">{ledger.error}</p>}
-			<button type="button" disabled={ledger.busy} onClick={() => ledger.request()}>
-				{t("sessionFiles.firstPage")}
-			</button>
-			{ledger.page?.nextCursor && (
-				<button type="button" disabled={ledger.busy} onClick={() => ledger.request(undefined, ledger.page?.nextCursor)}>
-					{t("sessionFiles.loadMore")}
+			<div className="session-files-pager">
+				{ledger.page?.nextCursor && (
+					<button
+						type="button"
+						className="session-files-pager-btn"
+						disabled={ledger.busy}
+						onClick={() => ledger.request(undefined, ledger.page?.nextCursor)}
+					>
+						{t("sessionFiles.loadMore")}
+					</button>
+				)}
+				<button
+					type="button"
+					className="session-files-pager-btn"
+					disabled={ledger.busy}
+					onClick={() => ledger.request()}
+					title={t("sessionFiles.firstPage")}
+					aria-label={t("sessionFiles.firstPage")}
+				>
+					<FiRefreshCw aria-hidden="true" />
 				</button>
-			)}
+			</div>
 		</div>,
 		document.body,
 	);

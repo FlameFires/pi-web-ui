@@ -9029,6 +9029,46 @@
 		flex: none;
 		font-size: 13px;
 	}
+	.session-files-help {
+		display: inline-flex;
+		align-items: center;
+		margin-left: auto;
+		color: var(--text-faint);
+		cursor: help;
+	}
+	.session-files-help:hover,
+	.session-files-help:focus-visible {
+		color: var(--text);
+	}
+	.session-files-pager {
+		flex: none;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 6px;
+	}
+	.session-files-pager-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 8px;
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		background: var(--bg-elev);
+		color: var(--text-dim);
+		font: inherit;
+		font-size: 11px;
+		line-height: 1.6;
+		cursor: pointer;
+	}
+	.session-files-pager-btn:hover:not(:disabled) {
+		color: var(--text);
+		border-color: var(--accent);
+	}
+	.session-files-pager-btn:disabled {
+		opacity: 0.45;
+		cursor: default;
+	}
 	.session-files-list {
 		flex: 1;
 		min-height: 0;
