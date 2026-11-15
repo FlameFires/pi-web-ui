@@ -2447,6 +2447,10 @@ export function useChat() {
 				case "file_changed":
 					dispatch({ type: "file_changed", path: msg.path });
 					break;
+				case "session_file_ledger_page":
+				case "session_file_ledger_changed":
+					window.dispatchEvent(new CustomEvent(`pi:${msg.type}`, { detail: msg }));
+					break;
 				case "file_content":
 					dispatch({ type: "file_content", content: msg });
 					break;

@@ -1,11 +1,12 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiFileText, FiX } from "react-icons/fi";
 import type { UiState } from "../types";
 import { useT } from "../i18n";
 import { useFloatingPanel } from "../use-floating-panel";
 import { useOverlayZIndex } from "../overlay-stack";
-import { collectSessionChangedFiles, type SessionChangedFile } from "../session-changed-files";
+import type { SessionChangedFile } from "../session-changed-files";
+import { useSessionFileLedger } from "../use-session-file-ledger";
 import { openFilePreview } from "../file-preview-bridge";
 import { FileChangeCard } from "./FileChangeCard";
 
@@ -13,11 +14,8 @@ export function SessionChangedFiles({ state }: { state: UiState }) {
 	const t = useT();
 	const [open, setOpen] = useState(false);
 	const anchor = useRef<HTMLButtonElement>(null);
-	const messages = useDeferredValue(state.messages);
-	const files = useMemo(
-		() => (open ? collectSessionChangedFiles(messages, state.cwd) : []),
-		[open, messages, state.cwd],
-	);
+	const ledger = useSessionFileLedger(state, open);
+	const files = (ledger.page?.files ?? []).map((file) => ({ ...file, operations: ledger.operations[file.path] ?? [] }));
 	useEffect(() => setOpen(false), [state.sessionId, state.cwd]);
 	return (
 		<>
@@ -38,7 +36,8 @@ export function SessionChangedFiles({ state }: { state: UiState }) {
 					key={`${state.sessionId}:${state.cwd}`}
 					files={files}
 					anchor={anchor.current}
-					partial={(state.historyStart ?? 0) > 0 || (state.historyTotal ?? 0) > state.messages.length}
+					partial={ledger.page?.coverage !== "available-transcript"}
+					ledger={ledger}
 					onClose={() => setOpen(false)}
 				/>
 			)}
@@ -50,11 +49,13 @@ function SessionFilesPanel({
 	files,
 	anchor,
 	partial,
+	ledger,
 	onClose,
 }: {
-	files: SessionChangedFile[];
+	files: (SessionChangedFile & { operationCount: number })[];
 	anchor: HTMLElement | null;
 	partial: boolean;
+	ledger: ReturnType<typeof useSessionFileLedger>;
 	onClose: () => void;
 }) {
 	const t = useT();
@@ -98,14 +99,15 @@ function SessionFilesPanel({
 						className={`session-files-item${file.status !== "present" ? ` is-${file.status}` : ""}`}
 					>
 						<summary
-							onClick={() =>
+							onClick={() => {
+								if (!expanded.has(file.path)) ledger.request(file.path);
 								setExpanded((previous) => {
 									const next = new Set(previous);
 									if (next.has(file.path)) next.delete(file.path);
 									else next.add(file.path);
 									return next;
-								})
-							}
+								});
+							}}
 						>
 							<FiFileText aria-hidden="true" />
 							<span className="session-files-path" title={file.path}>
@@ -125,7 +127,7 @@ function SessionFilesPanel({
 									{t("diffOpenFile")}
 								</button>
 							)}
-							<span>{t("sessionFiles.operations", { count: file.operations.length })}</span>
+							<span>{t("sessionFiles.operations", { count: file.operationCount })}</span>
 							{(file.status !== "present" || file.kind === "dir") && (
 								<span className={`session-files-state ${file.status}`}>
 									{file.kind === "dir" && file.status === "present"
@@ -136,6 +138,7 @@ function SessionFilesPanel({
 						</summary>
 						{expanded.has(file.path) && (
 							<div className="session-files-detail">
+								<LedgerEvidence path={file.path} ledger={ledger} />
 								{file.operations.map((op) => (
 									<div key={op.id} className="session-files-operation">
 										<div className="session-files-operation-label">
@@ -161,14 +164,89 @@ function SessionFilesPanel({
 										) : (
 											<pre>{op.output || t("sessionFiles.noDetail")}</pre>
 										)}
+										{op.truncated && (
+											<button
+												type="button"
+												disabled={ledger.busy}
+												onClick={() => ledger.request(file.path, undefined, { operationId: op.id })}
+											>
+												{t("sessionFiles.rawDetail")}
+											</button>
+										)}
 									</div>
 								))}
+								{ledger.cursors[file.path] && (
+									<button
+										type="button"
+										disabled={ledger.busy}
+										onClick={() => ledger.request(file.path, ledger.cursors[file.path])}
+									>
+										{t("sessionFiles.loadMore")}
+									</button>
+								)}
 							</div>
 						)}
 					</details>
 				))}
 			</div>
+			{ledger.error && <p className="session-files-note">{ledger.error}</p>}
+			<button type="button" disabled={ledger.busy} onClick={() => ledger.request()}>
+				{t("sessionFiles.firstPage")}
+			</button>
+			{ledger.page?.nextCursor && (
+				<button type="button" disabled={ledger.busy} onClick={() => ledger.request(undefined, ledger.page?.nextCursor)}>
+					{t("sessionFiles.loadMore")}
+				</button>
+			)}
 		</div>,
 		document.body,
+	);
+}
+
+function LedgerEvidence({ path, ledger }: { path: string; ledger: ReturnType<typeof useSessionFileLedger> }) {
+	const t = useT();
+	const page = ledger.contents[path];
+	if (!page) return <p className="session-files-note">{t("loading")}</p>;
+	return (
+		<>
+			{page.cumulative.status === "exact" ? (
+				<>
+					<strong>{t("sessionFiles.cumulative")}</strong>
+					<pre>{page.cumulative.patch || t("sessionFiles.noNetChange")}</pre>
+					{page.cumulative.nextOffset !== undefined && (
+						<button
+							type="button"
+							disabled={ledger.busy}
+							onClick={() =>
+								ledger.request(path, undefined, {
+									cumulative: true,
+									offset: page.cumulative.status === "exact" ? page.cumulative.nextOffset : undefined,
+								})
+							}
+						>
+							{t("sessionFiles.loadMore")}
+						</button>
+					)}
+				</>
+			) : (
+				<p className="session-files-note">{t("sessionFiles.cumulativeUnavailable")}</p>
+			)}
+			{page.rawText !== undefined && (
+				<>
+					<pre>{page.rawText}</pre>
+					{page.nextOffset !== undefined && (
+						<button
+							type="button"
+							disabled={ledger.busy}
+							onClick={() =>
+								ledger.request(path, undefined, { operationId: page.operationId, offset: page.nextOffset })
+							}
+						>
+							{t("sessionFiles.loadMore")}
+						</button>
+					)}
+				</>
+			)}
+		</>
 	);
 }

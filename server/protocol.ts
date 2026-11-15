@@ -1261,6 +1261,42 @@ export interface CanvasGraphSummary {
 	updatedAt: number;
 }
 
+export type SessionFileLedgerIdentity = {
+	conversationId: string;
+	sessionFile: string;
+	cwd: string;
+};
+export interface SessionFileLedgerFile {
+	path: string;
+	kind: "file" | "dir";
+	status: "present" | "deleted" | "moved";
+	operationCount: number;
+}
+export interface SessionFileLedgerOperation {
+	id: string;
+	toolName: string;
+	kind?: "file" | "dir";
+	argumentsText?: string;
+	details?: unknown;
+	output: string;
+	timestamp?: number;
+	label?: "created" | "edited" | "deleted" | "moved";
+	truncated?: boolean;
+}
+export type SessionFileLedgerPage = SessionFileLedgerIdentity & {
+	reqId: string;
+	path?: string;
+	files: SessionFileLedgerFile[];
+	operations: SessionFileLedgerOperation[];
+	nextCursor?: string;
+	coverage: "available-transcript" | "recorded-only" | "partial-transcript";
+	cumulative: { status: "unavailable"; reason: string } | { status: "exact"; patch: string; nextOffset?: number };
+	rawText?: string;
+	nextOffset?: number;
+	operationId?: string;
+	error?: string;
+};
+
 export type ClientMessage =
 	| { type: "resume_interrupted_subagent"; runId: string }
 	| { type: "hello"; clientId: string; protocolVersion?: number; locale?: string }
@@ -1444,6 +1480,15 @@ export type ClientMessage =
 	| { type: "list_projects" }
 	| { type: "list_files"; path?: string }
 	| { type: "read_file"; path: string }
+	| ({
+			type: "session_file_ledger";
+			reqId: string;
+			path?: string;
+			cursor?: string;
+			operationId?: string;
+			offset?: number;
+			cumulative?: boolean;
+	  } & SessionFileLedgerIdentity)
 	| { type: "write_file"; path: string; text: string }
 	| { type: "upload_file"; dirPath: string; name: string; data: string; uploadId?: string }
 	| { type: "file_create"; dir: string; name: string; kind: "file" | "dir" }
@@ -3157,6 +3202,8 @@ export interface DshMarketPlugin {
 export type UpdateItemKind = "webui" | "pi-core" | "package" | "git-extension" | "plugin" | "engine";
 
 export type ServerMessage =
+	| ({ type: "session_file_ledger_page" } & SessionFileLedgerPage)
+	| ({ type: "session_file_ledger_changed" } & SessionFileLedgerIdentity)
 	| { type: "new_chat_result"; requestId: string; conversationId?: string; ok: boolean }
 	| {
 			type: "canvas_list_result";

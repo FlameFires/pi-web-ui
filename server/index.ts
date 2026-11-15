@@ -1350,6 +1350,7 @@ export interface TerminalManagerLike {
 }
 
 export interface DispatchSession {
+	sessionFileLedger?(request: Extract<ClientMessage, { type: "session_file_ledger" }>): Promise<void>;
 	resumeInterruptedSubagent?(runId: string): Promise<{ ok: boolean; error?: string }>;
 	cwd: string;
 	readonly workspaceRoots?: readonly string[];
