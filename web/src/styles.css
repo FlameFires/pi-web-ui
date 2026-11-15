@@ -8921,12 +8921,16 @@
 		border: 0;
 		border-radius: 3px;
 		background: transparent;
-		color: var(--text);
+		color: var(--text-faint);
 		font: inherit;
+		height: 18px;
+		line-height: 1;
+		justify-content: center;
 		cursor: pointer;
 	}
 	.statusbar-preview:hover {
 		background: var(--bg-elev2);
+		color: var(--text);
 	}
 	.statusbar-preview:focus-visible {
 		outline: 2px solid var(--accent);
@@ -8951,13 +8955,17 @@
 		border: 0;
 		border-radius: 3px;
 		background: transparent;
-		color: var(--text);
+		color: var(--text-faint);
 		font: inherit;
+		height: 18px;
+		line-height: 1;
+		justify-content: center;
 		cursor: pointer;
 	}
 	.session-files-trigger:hover,
 	.session-files-trigger[aria-expanded="true"] {
 		background: var(--bg-elev2);
+		color: var(--text);
 	}
 	.session-files-trigger:focus-visible,
 	.session-files-item summary:focus-visible {
