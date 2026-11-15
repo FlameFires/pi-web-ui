@@ -64,6 +64,7 @@ interface Head {
 	sequence: number;
 	backfilled: boolean;
 	partial?: boolean;
+	quotedPathsRepaired?: boolean;
 }
 interface Transaction {
 	path: string;
@@ -189,8 +190,82 @@ export class SessionFileLedger {
 			return changed;
 		});
 	}
+	private async repairQuotedPaths(enabled: () => boolean): Promise<boolean> {
+		let changed = false;
+		let after = "";
+		for (;;) {
+			const names = await namesPage(join(this.directory, "list"), after);
+			if (!names.length) break;
+			for (const name of names) {
+				if (!enabled()) return changed;
+				after = name;
+				const item = await json<{ path: string } | null>(join(this.directory, "list", name), null);
+				if (!item || !item.path.startsWith('"') || !/\/[0-7]{3}/.test(item.path)) continue;
+				const fileDir = join(this.directory, "files", this.fileKey(item.path));
+				let operationCount = 0;
+				let cursor = "";
+				let complete = true;
+				for (;;) {
+					const operations = await namesPage(join(fileDir, "operations"), cursor);
+					if (!operations.length) break;
+					for (const key of operations) {
+						if (!enabled()) return changed;
+						cursor = key;
+						const stored = await json<StoredOperation | null>(join(fileDir, "operations", key), null);
+						const op = stored && (await json<SessionFileLedgerOperation | null>(join(fileDir, stored.raw), null));
+						if (!op) {
+							complete = false;
+							continue;
+						}
+						const pair: UiMessage[] = [
+							{
+								id: op.id + "-call",
+								role: "assistant",
+								content: [{ type: "toolCall", id: op.id, name: op.toolName, argumentsText: op.argumentsText ?? "{}" }],
+							},
+							{
+								id: op.id + "-result",
+								role: "toolResult",
+								toolCallId: op.id,
+								toolName: op.toolName,
+								details: op.details,
+								timestamp: op.timestamp,
+								content: [{ type: "text", text: op.output }],
+							},
+						];
+						const targets = collectSessionChangedFiles(pair, this.identity.cwd);
+						if (!targets.length || targets.some((file) => file.path === item.path || file.path.startsWith('"'))) {
+							complete = false;
+							continue;
+						}
+						await this.append(pair);
+						operationCount++;
+					}
+				}
+				if (!complete || !operationCount) continue;
+				await serial(this.directory, async () => {
+					await rm(join(this.directory, "list", name), { force: true });
+				});
+				changed = true;
+			}
+		}
+		return changed;
+	}
 	async backfill(enabled: () => boolean = () => true): Promise<boolean> {
-		if ((await this.head()).backfilled) return false;
+		if (!enabled()) return false;
+		let repaired = false;
+		if (!(await this.head()).quotedPathsRepaired) {
+			await serial(this.directory, () => this.recover());
+			repaired = await this.repairQuotedPaths(enabled);
+			if (!enabled()) return repaired;
+			await serial(this.directory, async () => {
+				const head = await this.head();
+				head.quotedPathsRepaired = true;
+				await mkdir(this.directory, { recursive: true });
+				await writeAtomic(join(this.directory, "head.json"), JSON.stringify(head));
+			});
+		}
+		if ((await this.head()).backfilled) return repaired;
 		const calls = new Map<string, UiMessage>();
 		let callBytes = 0;
 		let partial = false;

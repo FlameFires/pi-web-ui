@@ -112,6 +112,7 @@
 状态栏右侧「改动文件」入口查询服务端持久账本，不依赖 `UiState.messages` 或聊天历史分页。协议单源为 `server/protocol.ts`：`session_file_ledger` 请求携带 `conversationId + sessionFile + cwd + reqId`，服务端核对原会话身份后返回 `session_file_ledger_page`；成功写入发布轻量 `session_file_ledger_changed` 事件，前端只在面板挂载期间按事件刷新，不轮询、不把账本加入快照。摘要与每文件操作历史分别分页，稳定 cursor 绑定会话和文件；大操作原文与累计差异再按字符偏移分页，每次 4096 字符，响应受 48KiB 预算限制。
 
 `server/session-file-ledger.ts` 按会话文件与 cwd 哈希保存到 `<dataDir>/session-file-ledger/`，每文件保留最终状态、操作次数、逐次工具参数/结果和独立全文证据。成功工具完成才追加，以工具调用 ID 去重；失败、明确 noop 和已证实无变化的 write/edit 不计入。写入经同会话串行队列与可重放 `pending.json` 事务，原子写使用 `atomic-file.ts`，提交去重标记最后写入；重启首次查询或追加先重放残缺事务。纯解析单源为 `server/session-file-changes.ts`，保留可识别 Bash 删除、移动及 patch 多文件结果。不扫描 Git 或整个工作区，不声称能还原任意 Shell 写入。
+Git diff 头中的双引号路径先按 C 引用规则解码 UTF-8 八进制字节，再去掉 `a/`、`b/` 等前缀并归一化分隔符。旧账本首次回填时进行一次修复：只检查带双引号且包含八进制数字段的异常条目，从保留的原始操作重新解析并按调用 ID 追加到正确路径，全部操作可恢复后才移除错误列表入口；原始 payload 保留，不根据当前磁盘内容猜测历史证据。
 
 write/edit 的执行包装器在实际调用前后仅读取明确目标，各限 256KiB，UTF-8 文本才保存全文证据。首次 before 与最新 after 可用时显示真实累计差异；创建以已观测不存在为基线，内容回到基线时显示无净改动。旧转录、Bash、二进制、超限或缺失证据显示累计不可用，各次 patch 仅代表其覆盖范围。原始操作最多 2MiB，超限保留明确降级记录；列表页最多 30 项，操作展示超过 24KiB 时改为按需读取原文。
 

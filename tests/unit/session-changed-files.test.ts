@@ -59,6 +59,39 @@ describe("session changed files", () => {
 		expect(files[0].operations).toHaveLength(1);
 		expect(files[0].operations[0].label).toBe("edited");
 	});
+	it("decodes Git quoted UTF-8 octal paths before stripping diff prefixes", () => {
+		const encoded = String.raw`\347\236\254\345\245\275`;
+		const files = collectSessionChangedFiles(
+			mutation(
+				"quoted",
+				"replace",
+				{},
+				{ diff: `--- "a/19.00/${encoded}/py/template.demo.py"\n+++ "b/19.00/${encoded}/py/template.demo.py"\n` },
+			),
+			"/repo",
+		);
+		expect(files.map((file) => file.path)).toEqual(["19.00/瞬好/py/template.demo.py"]);
+	});
+	it("preserves numeric directories and decodes quoted spaces and header timestamps", () => {
+		const files = collectSessionChangedFiles(
+			[
+				...mutation("numeric", "replace", {}, { diff: "--- a/347/236/file.py\t2026-11-15\n" }),
+				...mutation("space", "replace", {}, { diff: '--- "a/a b/file.py"\n' }),
+			],
+			"/repo",
+		);
+		expect(files.map((file) => file.path)).toEqual(["347/236/file.py", "a b/file.py"]);
+	});
+	it("decodes escaped quotes and tabs without treating unquoted backslashes as Git quoting", () => {
+		const files = collectSessionChangedFiles(
+			[
+				...mutation("escaped", "replace", {}, { diff: String.raw`--- "a/a\t\"b\".py"` }),
+				...mutation("windows", "replace", {}, { diff: String.raw`--- C:\repo\plain.py` }),
+			],
+			"C:/repo",
+		);
+		expect(files.map((file) => file.path).sort()).toEqual(['a\t"b".py', "plain.py"].sort());
+	});
 	it("tracks all patch results including deleted and moved paths", () => {
 		const files = collectSessionChangedFiles(
 			mutation(
