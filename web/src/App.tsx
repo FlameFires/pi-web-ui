@@ -223,7 +223,7 @@ function NoticeToast({ notice, onDismiss }: { notice: Notice; onDismiss: (id: nu
 	const Icon = notice.level === "error" ? FiAlertCircle : notice.level === "warning" ? FiAlertTriangle : FiInfo;
 	return (
 		<div
-			className={`notice notice-${notice.level}${paused ? " paused" : ""}`}
+			className={`notice notice-${notice.level}${notice.interruptedRuns?.length ? " notice-recovery" : ""}${paused ? " paused" : ""}`}
 			role="status"
 			onMouseEnter={() => setPaused(true)}
 			onMouseLeave={() => setPaused(false)}
