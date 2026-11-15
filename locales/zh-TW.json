@@ -26,6 +26,7 @@
 		"sessionFiles.scope": "汇总已加载会话歷史中成功的檔案編輯，展开檔案可查看操作记录。不包含終端機脚本及其他会话的修改，也不代表 Git 净差异。",
 		"sessionFiles.partial": "较早消息尚未加载。可在對話中加载更早歷史，以补充檔案改动记录。",
 		"sessionFiles.cumulativeUnavailable": "累计差异不可用：缺少完整的首次修改前与最新修改后证据。各次操作只展示已记录补丁覆盖的范围。",
+		"sessionFiles.cumulativeUnavailableShort": "累计差异不可用",
 		"sessionFiles.loadMore": "下一页",
 		"sessionFiles.rawDetail": "查看记录原文",
 		"sessionFiles.firstPage": "首页 / 重试",

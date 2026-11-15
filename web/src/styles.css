@@ -9042,16 +9042,39 @@
 	}
 	.session-files-heading {
 		flex: none;
-		justify-content: flex-start;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding-bottom: 4px;
+		border-bottom: 1px solid var(--border);
 	}
 	.session-files-title {
 		flex: 0 1 auto;
-		text-align: left;
-		cursor: default;
+		min-width: 0;
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text);
 	}
-	.session-files-title:hover {
+	.session-files-flag {
+		display: flex;
+		align-items: flex-start;
+		gap: 5px;
+		margin: 0;
+		padding: 3px 6px;
+		border: 1px solid var(--border-soft);
+		border-radius: 5px;
 		background: var(--bg-elev);
-		color: var(--accent);
+		color: var(--text-dim);
+		font-size: 11px;
+		line-height: 1.5;
+		cursor: help;
+	}
+	.session-files-flag svg {
+		flex: none;
+		width: 12px;
+		height: 12px;
+		margin-top: 1px;
+		color: var(--text-faint);
 	}
 	.session-files-help {
 		flex: none;
