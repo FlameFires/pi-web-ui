@@ -46,6 +46,7 @@ function endpoint(owner: any, id: string, parentId?: string) {
 		id,
 		cwd: "/project",
 		parentId,
+		isSubagent: !!parentId,
 		title: id,
 		session: {
 			isStreaming: false,
@@ -65,6 +66,68 @@ afterEach(() => {
 });
 
 describe("ClientSession communication runtime", () => {
+	it.each(["send", "request"])(
+		"rejects %s between a subagent and another task before queuing or waking",
+		async (action) => {
+			const a = holder("a"),
+				b = holder("b"),
+				c = holder("c");
+			const parent = endpoint(a, "c1"),
+				worker = endpoint(b, "worker", parent.id);
+			bindConversationParent(worker, parent);
+			const unrelated = endpoint(c, "c1"),
+				foreignChild = endpoint(c, "foreign-child", unrelated.id);
+			bindConversationParent(foreignChild, unrelated);
+			for (const [senderOwner, sender, receiver] of [
+				[b, worker, unrelated],
+				[c, unrelated, worker],
+				[b, worker, foreignChild],
+			] as const) {
+				await expect(
+					senderOwner.communicate(sender.id, action, {
+						to: conversationIdentity(receiver),
+						message: "private task progress",
+					}),
+				).rejects.toThrow("task boundaries");
+				expect(receiver.session.sendUserMessage).not.toHaveBeenCalled();
+				expect(senderOwner.communicationPending(receiver)).toBe(false);
+			}
+			for (const owner of [a, b, c]) expect(owner.pendingQuestions.size).toBe(0);
+			const recipients = (await b.communicate(worker.id, "read", {})).conversations;
+			expect(recipients.map((item: any) => item.address)).toContain(conversationIdentity(parent));
+			expect(recipients.map((item: any) => item.address)).not.toContain(conversationIdentity(unrelated));
+			expect(recipients.map((item: any) => item.address)).not.toContain(conversationIdentity(foreignChild));
+		},
+	);
+	it("allows sibling coordination within one task while main conversations can still communicate explicitly", async () => {
+		const a = holder("a"),
+			b = holder("b");
+		const parent = endpoint(a, "parent"),
+			otherMain = endpoint(b, "other-main");
+		const left = endpoint(a, "left", parent.id),
+			right = endpoint(b, "right", parent.id);
+		bindConversationParent(left, parent);
+		bindConversationParent(right, parent);
+		await a.communicate(left.id, "send", { to: conversationIdentity(right), message: "interface change" });
+		expect(right.session.sendUserMessage).toHaveBeenCalledOnce();
+		await a.communicate(parent.id, "send", {
+			to: conversationIdentity(otherMain),
+			message: "explicit main collaboration",
+		});
+		expect(otherMain.session.sendUserMessage).toHaveBeenCalledOnce();
+	});
+	it("does not grant an orphaned subagent access to a replacement parent with the same id", async () => {
+		const a = holder("a");
+		const parent = endpoint(a, "parent"),
+			worker = endpoint(a, "worker", parent.id);
+		bindConversationParent(worker, parent);
+		a.convs.delete(parent.id);
+		const replacement = endpoint(a, "parent");
+		await expect(
+			a.communicate(worker.id, "send", { to: conversationIdentity(replacement), message: "old progress" }),
+		).rejects.toThrow("task boundaries");
+		expect(replacement.session.sendUserMessage).not.toHaveBeenCalled();
+	});
 	it("routes cross-owner sends to the actual busy endpoint and preserves data framing", async () => {
 		const a = holder("a"),
 			b = holder("b");
@@ -100,9 +163,10 @@ describe("ClientSession communication runtime", () => {
 		await expect(c.communicate(grandchild.id, "send", { to: "root", message: "nested review" })).resolves.toMatchObject(
 			{ status: "queued" },
 		);
-		await expect(c.communicate(grandchild.id, "send", { to: peer.id, message: "same project" })).resolves.toMatchObject(
-			{ status: "queued" },
+		await expect(c.communicate(grandchild.id, "send", { to: peer.id, message: "same project" })).rejects.toThrow(
+			"task boundaries",
 		);
+		expect(peer.session.sendUserMessage).not.toHaveBeenCalled();
 		expect(root.session.sendUserMessage).toHaveBeenCalledTimes(2);
 		expect(child.session.sendUserMessage).toHaveBeenCalledOnce();
 	});
@@ -162,7 +226,7 @@ describe("ClientSession communication runtime", () => {
 		root.cwd = "/managed-worktree";
 		root.subagentWorktree = { worktreePath: root.cwd, mainRepoPath: peer.cwd };
 		child.cwd = "/independent-checkout";
-		await expect(b.communicate(child.id, "send", { to: peer.id, message: "review" })).resolves.toMatchObject({
+		await expect(b.communicate(child.id, "send", { to: root.id, message: "review" })).resolves.toMatchObject({
 			status: "queued",
 		});
 	});
@@ -241,7 +305,7 @@ describe("ClientSession communication runtime", () => {
 		const a = holder("a"),
 			b = holder("b");
 		const root = endpoint(a, "root-id"),
-			sender = endpoint(a, "sender"),
+			sender = endpoint(a, "sender", root.id),
 			target = endpoint(b, "worker", root.id);
 		Object.assign(target, {
 			isSubagent: true,
@@ -406,6 +470,8 @@ describe("ClientSession communication runtime", () => {
 		const from = endpoint(a, "from"),
 			target = endpoint(b, "to"),
 			nested = endpoint(a, "nested", from.id);
+		from.parentId = target.id;
+		bindConversationParent(from, target);
 		Object.assign(from, { isSubagent: true, notifyOnDone: "manual" });
 		from.session.isIdle = true;
 		nested.session.isStreaming = true;
