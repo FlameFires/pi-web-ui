@@ -440,8 +440,11 @@ export function makeConversationReadTool(
 		description:
 			"Read ANOTHER conversation: a running conversation of this client (incl. subagents — id from action=list) " +
 			"or a persisted history session (file path). Use it whenever the user references another chat. " +
-			"Only listed sessions are readable; other tabs' live runs appear in history once persisted.",
+			"To claim a conversation is currently running, first use action=list or action=status in this turn; old diffs, history, and messages are not live status. Only listed sessions are readable; other tabs' live runs appear in history once persisted.",
 		promptSnippet: "inspect another conversation the user mentions (list/read/files/status)",
+		promptGuidelines: [
+			"Check list/status before claiming another conversation is running; old diffs and messages do not prove activity.",
+		],
 		parameters: Type.Object({
 			action: Type.Optional(
 				Type.Unsafe<string>({
