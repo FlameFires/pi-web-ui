@@ -544,6 +544,7 @@ export class SettingsService {
 				autoReload: this.settings.autoReload ?? this.defaultDevNoCache(),
 				thinkingWrap: this.settings.thinkingWrap,
 				toolsWrap: this.settings.toolsWrap,
+				sessionChangedFilesEnabled: this.settings.sessionChangedFilesEnabled ?? true,
 				toolImagesEnabled: this.settings.toolImagesEnabled ?? true,
 				keepRecentMessages: normalizeKeepRecentMessages(this.settings.keepRecentMessages),
 				reversePagination: this.settings.reversePagination ?? false,
@@ -683,6 +684,7 @@ export class SettingsService {
 		goalModeEnabled?: boolean;
 		thinkingWrap?: boolean;
 		toolsWrap?: boolean;
+		sessionChangedFilesEnabled?: boolean;
 		toolImagesEnabled?: boolean;
 		keepRecentMessages?: number;
 		reversePagination?: boolean;
@@ -869,6 +871,9 @@ export class SettingsService {
 		}
 		if (partial.thinkingWrap !== undefined) {
 			next.thinkingWrap = partial.thinkingWrap;
+		}
+		if (typeof partial.sessionChangedFilesEnabled === "boolean") {
+			next.sessionChangedFilesEnabled = partial.sessionChangedFilesEnabled;
 		}
 		if (partial.toolsWrap !== undefined) {
 			next.toolsWrap = partial.toolsWrap;

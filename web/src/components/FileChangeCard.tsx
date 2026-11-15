@@ -6,6 +6,7 @@ import { openFilePreview } from "../file-preview-bridge";
 import { useCopyFeedback } from "../use-copy-feedback";
 import { useOverlayZIndex } from "../overlay-stack";
 import { parseFileMutationArgs, type DiffHunk, type DiffLine } from "../file-diff";
+import { SyntaxLanguageContext, SyntaxText } from "./SyntaxText";
 
 export interface FileChangeCardProps {
 	toolName: string;
@@ -254,7 +255,9 @@ export const FileChangeCard = memo(function FileChangeCard({
 					</div>
 				</div>
 
-				<div className="file-diff-body">{renderContent()}</div>
+				<div className="file-diff-body">
+					<SyntaxLanguageContext.Provider value={data.language}>{renderContent()}</SyntaxLanguageContext.Provider>
+				</div>
 			</div>
 
 			{isFullscreen &&
@@ -376,7 +379,9 @@ export const FileChangeCard = memo(function FileChangeCard({
 								</div>
 							</div>
 
-							<div className="file-diff-fullscreen-body">{renderContent()}</div>
+							<div className="file-diff-fullscreen-body">
+								<SyntaxLanguageContext.Provider value={data.language}>{renderContent()}</SyntaxLanguageContext.Provider>
+							</div>
 						</div>
 					</div>,
 					document.body,
@@ -393,7 +398,9 @@ export function WriteCodeView({ content, startLine = 1 }: { content: string; sta
 			{lines.map((line, idx) => (
 				<div key={idx} className="diff-code-row">
 					<span className="diff-line-num">{startLine + idx}</span>
-					<span className="diff-line-text">{line || " "}</span>
+					<span className="diff-line-text">
+						<SyntaxText text={line || " "} />
+					</span>
 				</div>
 			))}
 		</div>
@@ -445,16 +452,15 @@ function DiffLineRow({ line }: { line: DiffLine }) {
 			<span className="diff-gutter-num">{lineNum ?? ""}</span>
 			<span className="diff-gutter-sym">{gutter}</span>
 			<span className="diff-line-content">
-				{line.tokens && line.tokens.length > 0
-					? line.tokens.map((token, i) => (
-							<span
-								key={i}
-								className={token.type === "add" ? "char-add" : token.type === "del" ? "char-del" : undefined}
-							>
-								{token.text}
-							</span>
-						))
-					: line.content || " "}
+				{line.tokens && line.tokens.length > 0 ? (
+					line.tokens.map((token, i) => (
+						<span key={i} className={token.type === "add" ? "char-add" : token.type === "del" ? "char-del" : undefined}>
+							<SyntaxText text={token.text} />
+						</span>
+					))
+				) : (
+					<SyntaxText text={line.content || " "} />
+				)}
 			</span>
 		</div>
 	);
@@ -554,13 +560,15 @@ export function SplitDiffView({
 										<span className="diff-gutter-sym">{pair.left?.type === "del" ? "-" : " "}</span>
 									</div>
 									<span className="diff-line-code">
-										{pair.left?.tokens && pair.left.tokens.length > 0
-											? pair.left.tokens.map((token, k) => (
-													<span key={k} className={token.type === "del" ? "char-del" : undefined}>
-														{token.text}
-													</span>
-												))
-											: pair.left?.content || " "}
+										{pair.left?.tokens && pair.left.tokens.length > 0 ? (
+											pair.left.tokens.map((token, k) => (
+												<span key={k} className={token.type === "del" ? "char-del" : undefined}>
+													<SyntaxText text={token.text} />
+												</span>
+											))
+										) : (
+											<SyntaxText text={pair.left?.content || " "} />
+										)}
 									</span>
 								</div>
 							))}
@@ -588,13 +596,15 @@ export function SplitDiffView({
 										<span className="diff-gutter-sym">{pair.right?.type === "add" ? "+" : " "}</span>
 									</div>
 									<span className="diff-line-code">
-										{pair.right?.tokens && pair.right.tokens.length > 0
-											? pair.right.tokens.map((token, k) => (
-													<span key={k} className={token.type === "add" ? "char-add" : undefined}>
-														{token.text}
-													</span>
-												))
-											: pair.right?.content || " "}
+										{pair.right?.tokens && pair.right.tokens.length > 0 ? (
+											pair.right.tokens.map((token, k) => (
+												<span key={k} className={token.type === "add" ? "char-add" : undefined}>
+													<SyntaxText text={token.text} />
+												</span>
+											))
+										) : (
+											<SyntaxText text={pair.right?.content || " "} />
+										)}
 									</span>
 								</div>
 							))}

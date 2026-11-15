@@ -102,12 +102,12 @@ export function FooterBar({
 
 	return (
 		<footer className="statusbar">
-			<div className="statusbar-left">
-				<SessionChangedFiles state={state} />
-				{renderGroup(leftItems)}
-			</div>
+			<div className="statusbar-left">{renderGroup(leftItems)}</div>
 			{centerItems.length > 0 && <div className="statusbar-center">{renderGroup(centerItems)}</div>}
-			<div className="statusbar-right">{renderGroup(rightItems)}</div>
+			<div className="statusbar-right">
+				{chat.settings?.sessionChangedFilesEnabled !== false && <SessionChangedFiles state={state} />}
+				{renderGroup(rightItems)}
+			</div>
 			{editing && (
 				<ProjectPicker
 					open

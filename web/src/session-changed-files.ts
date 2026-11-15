@@ -1,4 +1,5 @@
 import type { UiMessage, UiToolCallBlock } from "./types";
+import { diffHeaderPath } from "./file-diff";
 
 export interface SessionFileOperation {
 	id: string;
@@ -234,7 +235,8 @@ export function collectSessionChangedFiles(messages: readonly UiMessage[], works
 					string(details.path) ||
 					string(args.path) ||
 					string(args.file_path) ||
-					string(args.filePath)
+					string(args.filePath) ||
+					diffHeaderPath(message.details)
 				).replaceAll("\\", "/");
 				if (path)
 					targets.push({ path, status: "present", label: toolName === "write" ? "created" : "edited", kind: "file" });

@@ -51,6 +51,14 @@ describe("session changed files", () => {
 		expect(files[0].path).toBe("docs/a.md");
 		expect(files[0].operations).toHaveLength(1);
 	});
+	it("derives the path from the unified patch header when anchor edits omit path", () => {
+		const patch = "--- a/docs/b.md\n+++ b/docs/b.md\n@@ -1 +1 @@\n-old\n+new\n";
+		const messages = mutation("1", "replace_match", { match: "old", replacement: "new" }, { patch });
+		const files = collectSessionChangedFiles(messages, "/repo");
+		expect(files.map((f) => f.path)).toEqual(["docs/b.md"]);
+		expect(files[0].operations).toHaveLength(1);
+		expect(files[0].operations[0].label).toBe("edited");
+	});
 	it("tracks all patch results including deleted and moved paths", () => {
 		const files = collectSessionChangedFiles(
 			mutation(
