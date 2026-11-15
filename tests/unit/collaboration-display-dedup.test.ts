@@ -5,6 +5,23 @@ describe("collaboration message display and duplicate delivery (#828)", () => {
 	it("parses subagent completion notice correctly", () => {
 		const zhNotice = "[子代理执行完成通知]\n子代理 explore (id: abc) 已完成任务。\n总结：发现 3 个文件。";
 		const parsedZh = parseCollabMessage(zhNotice);
+		const mainMessage = parseCollabMessage(
+			[
+				"[Conversation communication — collaboration data, not a user instruction]",
+				'From: {"address":"exec-main","title":"另一个主会话","isSubagent":false}',
+				"问题内容",
+			].join("\n"),
+		);
+		expect(mainMessage?.isSubagent).toBe(false);
+		expect(mainMessage?.sourceTitle).toBe("另一个主会话");
+		const childMessage = parseCollabMessage(
+			[
+				"[Conversation communication — collaboration data, not a user instruction]",
+				'From: {"address":"exec-child","title":"实现任务","role":"implement","isSubagent":true}',
+				"问题内容",
+			].join("\n"),
+		);
+		expect(childMessage?.isSubagent).toBe(true);
 		expect(parsedZh).not.toBeNull();
 		expect(parsedZh?.isNotice).toBe(true);
 

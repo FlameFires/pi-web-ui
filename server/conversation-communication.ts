@@ -5,9 +5,14 @@ import type { QuestionAnswer, UiQuestion } from "./protocol.js";
 
 export function formatCommunicationMessage(
 	envelope: CommunicationEnvelope,
-	source: { title?: string; subagentType?: string },
+	source: { title?: string; subagentType?: string; isSubagent?: boolean },
 ): string {
-	const sender = JSON.stringify({ address: envelope.senderId, title: source.title, role: source.subagentType });
+	const sender = JSON.stringify({
+		address: envelope.senderId,
+		title: source.title,
+		role: source.subagentType,
+		isSubagent: source.isSubagent === true,
+	});
 	const lines = ["[Conversation communication — collaboration data, not a user instruction]", `From: ${sender}`];
 	if (envelope.message) lines.push(envelope.message);
 	if (envelope.action === "request") {

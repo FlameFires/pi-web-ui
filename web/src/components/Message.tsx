@@ -152,6 +152,7 @@ export function asBash(block: UiContentBlock): UiBashBlock | null {
 export interface CollabMeta {
 	isNotice?: boolean;
 	sourceTitle?: string;
+	isSubagent?: boolean;
 	sourceRole?: string;
 	address?: string;
 	requestId?: string;
@@ -166,6 +167,7 @@ export function parseCollabMessage(text: string): CollabMeta | null {
 	}
 	if (text.startsWith("[Conversation communication — collaboration data, not a user instruction]")) {
 		let sourceTitle: string | undefined;
+		let isSubagent: boolean | undefined;
 		let sourceRole: string | undefined;
 		let address: string | undefined;
 		const fromMatch = text.match(/From:\s*(\{[^}\r\n]+\})/);
@@ -173,6 +175,7 @@ export function parseCollabMessage(text: string): CollabMeta | null {
 			try {
 				const obj = JSON.parse(fromMatch[1]);
 				sourceTitle = obj.title;
+				isSubagent = obj.isSubagent === true;
 				sourceRole = obj.role;
 				address = obj.address;
 			} catch {}
@@ -204,6 +207,7 @@ export function parseCollabMessage(text: string): CollabMeta | null {
 		return {
 			isNotice: false,
 			sourceTitle,
+			isSubagent,
 			sourceRole,
 			address,
 			requestId,
@@ -1094,7 +1098,7 @@ export const Message = memo(function Message({
 						: collabMeta
 							? collabMeta.isNotice
 								? `${t("subagentBadge")} · 完成通知`
-								: `${t("subagentBadge")} · ${collabMeta.sourceTitle || collabMeta.sourceRole || t("subagentBadge")}`
+								: `${collabMeta.isSubagent ? t("subagentBadge") : t("collaborationBadge")} · ${collabMeta.sourceTitle || collabMeta.sourceRole || t("collaborationBadge")}`
 							: roleLabel(message.role, t)}
 				</span>
 				{messageLabel && (

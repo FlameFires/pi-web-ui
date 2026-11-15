@@ -367,6 +367,7 @@
 		"timeGroupPastWeek": "Past 7 days",
 		"timeGroupEarlier": "Earlier",
 		"subagentBadge": "サブエージェント",
+		"collaborationBadge": "Collaboration",
 		"collapseSubagents": "サブエージェントを折りたたむ",
 		"expandSubagents": "サブエージェントを展開",
 		"subagentTitle": "サブエージェント ・ {title}",

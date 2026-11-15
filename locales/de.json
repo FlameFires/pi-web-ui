@@ -367,6 +367,7 @@
 		"timeGroupPastWeek": "Past 7 days",
 		"timeGroupEarlier": "Earlier",
 		"subagentBadge": "Subagent",
+		"collaborationBadge": "Collaboration",
 		"collapseSubagents": "Subagenten einklappen",
 		"expandSubagents": "Subagenten ausklappen",
 		"subagentTitle": "Subagent · {title}",

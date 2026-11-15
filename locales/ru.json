@@ -367,6 +367,7 @@
 		"timeGroupPastWeek": "Последние 7 дней",
 		"timeGroupEarlier": "Ранее",
 		"subagentBadge": "Субагент",
+		"collaborationBadge": "Collaboration",
 		"collapseSubagents": "Свернуть подагентов",
 		"expandSubagents": "Развернуть подагентов",
 		"subagentTitle": "Субагент · {title}",

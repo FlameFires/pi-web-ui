@@ -367,6 +367,7 @@
 		"timeGroupPastWeek": "近 7 天",
 		"timeGroupEarlier": "更早之前",
 		"subagentBadge": "子代理",
+		"collaborationBadge": "协作",
 		"collapseSubagents": "摺疊子代理",
 		"expandSubagents": "展開子代理",
 		"subagentTitle": "子代理 · {title}",

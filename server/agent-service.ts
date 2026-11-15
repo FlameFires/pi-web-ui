@@ -7225,7 +7225,7 @@ export class ClientSession {
 		owner.assertSubagentWorktreeAdmission(conv);
 		if (conv.subagentTaskStopped) throw new Error("Communication target task was stopped");
 		const busy = conv.session.isStreaming || conv.promptInFlight;
-		const text = formatCommunicationMessage(envelope, source);
+		const text = formatCommunicationMessage(envelope, { ...source, isSubagent: source.isSubagent });
 		if (!busy) {
 			if (conv.isSubagent && (conv.subagentDoneNotified || conv.subagentConsumedByParent)) {
 				conv.subagentDoneNotified = false;
