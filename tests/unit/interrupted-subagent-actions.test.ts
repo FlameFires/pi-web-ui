@@ -26,19 +26,33 @@ function client() {
 }
 
 describe("interrupted subagent recovery actions", () => {
+	it("acknowledges main recovery when execution starts without waiting for the whole turn", async () => {
+		const { session } = client();
+		const original = session.convs.get("parent");
+		session.interruptedMainOffers.set("main:original", original);
+		session.getLang = () => "en";
+		let finish!: () => void;
+		session.prompt = vi.fn((_text, _attachments, _queue, _conv, onStarted) => {
+			onStarted();
+			return new Promise<void>((resolve) => {
+				finish = resolve;
+			});
+		});
+		expect(await session.resumeInterruptedSubagent("main:original")).toEqual({ ok: true });
+		expect(session.interruptedMainOffers.has("main:original")).toBe(false);
+		finish();
+	});
 	it("groups a restarted parent with its interrupted children in a single notice", async () => {
 		const { session } = client();
 		const parent = session.convs.get("parent");
 		parent.cwd = "/projects/self";
 		session.stateStore = { dataDir: "/unused" };
-		const spy = vi
-			.spyOn(mainRecovery, "interruptedMainRun")
-			.mockResolvedValue({
-				bootId: "old",
-				sessionFile: parent.session.sessionFile,
-				cwd: parent.cwd,
-				title: "Original parent",
-			});
+		const spy = vi.spyOn(mainRecovery, "interruptedMainRun").mockResolvedValue({
+			bootId: "old",
+			sessionFile: parent.session.sessionFile,
+			cwd: parent.cwd,
+			title: "Original parent",
+		});
 		try {
 			await session.recoverSubagentRuns(parent);
 			expect(session.emit).toHaveBeenCalledTimes(1);
@@ -82,7 +96,7 @@ describe("interrupted subagent recovery actions", () => {
 		session.getLang = () => "en";
 		session.prompt = vi.fn().mockResolvedValue(undefined);
 		expect(await session.resumeInterruptedSubagent("main:original")).toEqual({ ok: true });
-		expect(session.prompt).toHaveBeenCalledWith(expect.any(String), undefined, false, original);
+		expect(session.prompt).toHaveBeenCalledWith(expect.any(String), undefined, false, original, expect.any(Function));
 		expect(resume).not.toHaveBeenCalled();
 		expect(await session.resumeInterruptedSubagent("main:original")).toEqual({ ok: false, error: "not_available" });
 	});
