@@ -6,7 +6,7 @@ export async function captureFileEvidence(path: string): Promise<FileEvidence> {
 		try {
 			const info = await file.stat();
 			if (!info.isFile() || info.size > 256 * 1024) return { available: false };
-			const data = Buffer.alloc(256 * 1024 + 1);
+			const data = Buffer.alloc(info.size);
 			const { bytesRead } = await file.read(data, 0, data.length, 0);
 			const after = await file.stat();
 			if (
