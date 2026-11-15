@@ -7090,7 +7090,7 @@ export class ClientSession {
 		return home.session.communicate(home.convId, action, args, signal);
 	}
 
-	private communicationProject(endpoint: CommunicationEndpoint): string {
+	private communicationRoot(endpoint: CommunicationEndpoint): Conversation {
 		const home = this.communicationHome(endpoint);
 		let conv = home.conv;
 		const seen = new Set<Conversation>();
@@ -7101,6 +7101,11 @@ export class ClientSession {
 			if (!parent) break;
 			conv = parent;
 		}
+		return conv;
+	}
+
+	private communicationProject(endpoint: CommunicationEndpoint): string {
+		const conv = this.communicationRoot(endpoint);
 		if (conv.subagentWorktree && isSameOrSubpath(conv.cwd, conv.subagentWorktree.worktreePath))
 			return normalizePathKey(conv.subagentWorktree.mainRepoPath);
 		return normalizePathKey(conv.cwd);
@@ -7135,6 +7140,13 @@ export class ClientSession {
 				const to = this.communicationHome(target);
 				if (!sameCwd(this.communicationProject(sender), this.communicationProject(target)))
 					throw new Error("Cross-project communication is not allowed");
+				if (
+					(from.conv.isSubagent || to.conv.isSubagent) &&
+					this.communicationRoot(sender) !== this.communicationRoot(target)
+				)
+					throw new Error(
+						"Subagent communication cannot cross task boundaries; use parent, root, or a sibling in the same task",
+					);
 				if (from.owner.botExecution !== to.owner.botExecution)
 					throw new Error("Communication cannot cross Bot execution boundaries");
 				const fromSandbox = from.owner.sandboxes.getExecutionIdentity(from.conv.cwd);
