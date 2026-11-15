@@ -8999,7 +8999,6 @@
 		outline-offset: 2px;
 	}
 	.session-files-panel {
-	.session-files-panel {
 		width: min(480px, calc(100vw - 32px));
 		height: min(340px, calc(100vh - 120px));
 		box-sizing: border-box;
