@@ -1058,9 +1058,11 @@ export const LeftPanel = memo(function LeftPanel({
 						? entry
 						: { ...entry, hidden: true };
 				}
-				if (isElsewhere && entry.id === "host:conv-dismiss-subagents") return { ...entry, hidden: true };
-				if (entry.id === "host:conv-dismiss-subagents")
+				if (entry.id === "host:conv-dismiss-subagents") {
+					// 只有运行中的对话才知道「哪些子代理属于它」；历史行的计数是全局口径，会显示成别人的子代理。
+					if (target.kind !== "running" || !scopeId) return { ...entry, hidden: true };
 					return { ...entry, label, ...(nFinished === 0 ? { when: [...(entry.when ?? []), "disabled"] } : {}) };
+				}
 				if (entry.id === "host:conv-force-dismiss")
 					return armedTarget
 						? { ...entry, ...(armed ? { label: t("forceDismissConfirm") } : {}) }
