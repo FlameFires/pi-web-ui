@@ -8911,6 +8911,21 @@
 		flex-shrink: 0;
 	}
 
+	.statusbar [data-bar-item="host:search"] {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		align-self: center;
+		height: 18px;
+		min-height: 0;
+		padding: 0 4px;
+		line-height: 1;
+	}
+	.statusbar [data-bar-item="host:search"] .bar-item-icon {
+		display: block;
+		flex: none;
+		vertical-align: middle;
+	}
 	.statusbar-preview {
 		display: inline-flex;
 		align-items: center;
