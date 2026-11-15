@@ -187,7 +187,7 @@ events.jsonl    追加式生命周期流水（有字节上限，截断后只留�
 
 写入纪律：所有写操作进每个 run 的**串行队列**，调用方一律 fire-and-forget；`status.json` 走 `writeAtomic`，事件用 `appendFile`；任何 IO 失败只记 `lastError()`，绝不让账本问题打断派发或回合结束（`dispose` 时 `flush()`）。有界：run 目录数默认 200（`PI_WEB_SUBAGENT_LEDGER_MAX_RUNS`，`0` 关闭整本账）、单 run 事件 256KB、`prompt` 8KB、`outputTail` 4KB、证据条目各 5 条。淘汰只挑已结束的 run，且要等该 run 的写队列排空再删目录——否则排队中的 `mkdir` 会把目录又建回来。
 
-重启对账只认 `bootId`：每条记录带本进程随机身份，`recover()` 只把**别的 boot** 留下的 `running` 判成 `interrupted`，本进程的活运行一律不动；重复调用幂等。`ClientSession.create()` 里 fire-and-forget 调用一次，命中时推一条 notice（列出前 5 个标题与 id），告诉用户/模型可以 `get_result` 取已产出的证据或 `resume` 续跑。**主对话的重启恢复与子代理分开**：`streamingSummaries()`（daemon 记录「重启时正在流式」的入口）跳过子代理与持久化子会话，避免把 child 当成普通标签页重新打开、丢掉父子关系。
+重启对账只认 `bootId`：每条记录带本进程随机身份，`recover()` 只把**别的 boot** 留下的 `running` 判成 `interrupted`，本进程的活运行一律不动；重复调用幂等。`ClientSession.create()` 里 fire-and-forget 调用一次，命中时推一条带任务列表的 notice，由用户逐项「恢复」或「全部恢复」，复用已有 `resumeSubagentRun` 带进度重派。此类通知不自动消失，关闭只暂不处理；服务端限定可恢复任务并阻止重复点击，回执显示成功或允许失败后重试。模型仍可用 `get_result` 取证据或 `resume` 续跑。**主对话的重启恢复与子代理分开**：`streamingSummaries()`（daemon 记录「重启时正在流式」的入口）跳过子代理与持久化子会话，避免把 child 当成普通标签页重新打开、丢掉父子关系。
 
 账本由运行态在各收口点同步：派发登记 `running`；回合结束、完成登记（含证据）、停止、移出、`steer` 重开一轮、工作树收尾分别 `upsert` + `event`（`spawned / turn_end / completion_requested / stopped / dismissed / steer_restart / worktree_finalized`）。读侧：`conversation(action="list")` 在活运行之后追加账本行（跳过已移出与仍在内存里的），`get_result` 在内存查不到时回落到账本，给出状态、证据、错误、工作树、`sessionFile` 与输出尾部。
 

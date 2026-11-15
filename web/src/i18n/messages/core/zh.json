@@ -1,4 +1,10 @@
 {
+	"restartRecovery.resume": "恢复",
+	"restartRecovery.resumeAll": "全部恢复",
+	"restartRecovery.resuming": "正在恢复…",
+	"restartRecovery.resumed": "已恢复",
+	"restartRecovery.retry": "重试",
+	"restartRecovery.failed": "恢复失败，可重试。",
 	"reopenFilePreview": "恢复预览：{name}（{count} 个文件）",
 	"sessionFiles.setting": "会话改动文件",
 	"sessionFiles.settingDesc": "在状态栏显示本会话的文件改动、操作历史和差异。关闭后不计算改动列表。",

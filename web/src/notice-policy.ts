@@ -3,6 +3,7 @@ export interface NoticeLike {
 	level: "info" | "warning" | "error";
 	text: string;
 	textEn?: string;
+	interruptedRuns?: readonly { runId: string }[];
 }
 
 export const MAX_VISIBLE_NOTICES = 2;
@@ -63,11 +64,13 @@ export function enqueueNotice<T extends NoticeLike>(
 	const deduped = current.filter((n) => `${n.level}:${(n.text ?? "").trim()}` !== incomingKey);
 	const next = [...deduped, incoming];
 	while (next.length > maxVisible) {
-		const nonErrorIdx = next.findIndex((n) => n.level !== "error");
+		const nonErrorIdx = next.findIndex((n) => n.level !== "error" && !n.interruptedRuns?.length);
 		if (nonErrorIdx >= 0) {
 			next.splice(nonErrorIdx, 1);
 		} else {
-			next.shift();
+			const removable = next.findIndex((n) => !n.interruptedRuns?.length);
+			if (removable < 0) break;
+			next.splice(removable, 1);
 		}
 	}
 	return next;

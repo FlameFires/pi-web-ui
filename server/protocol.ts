@@ -1262,6 +1262,7 @@ export interface CanvasGraphSummary {
 }
 
 export type ClientMessage =
+	| { type: "resume_interrupted_subagent"; runId: string }
 	| { type: "hello"; clientId: string; protocolVersion?: number; locale?: string }
 	| { type: "canvas_list" }
 	| { type: "canvas_load"; id: string; requestId?: string }
@@ -3356,7 +3357,14 @@ export type ServerMessage =
 	  }
 	| { type: "commands"; commands: CommandDef[]; path: string }
 	| { type: "slash_commands"; commands: SlashCommandInfo[] }
-	| { type: "notice"; level: "info" | "warning" | "error"; text: string; textEn?: string }
+	| {
+			type: "notice";
+			level: "info" | "warning" | "error";
+			text: string;
+			textEn?: string;
+			interruptedRuns?: { runId: string; title: string }[];
+	  }
+	| { type: "subagent_resume_result"; runId: string; ok: boolean; error?: string }
 	| { type: "scm_changed" }
 	| { type: "extension_inventory_changed" }
 	| { type: "heartbeat"; hostMetrics?: UiHostMetrics; latencyMs?: number }

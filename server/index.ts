@@ -1350,6 +1350,7 @@ export interface TerminalManagerLike {
 }
 
 export interface DispatchSession {
+	resumeInterruptedSubagent?(runId: string): Promise<{ ok: boolean; error?: string }>;
 	cwd: string;
 	readonly workspaceRoots?: readonly string[];
 	prompt(text: string, attachments?: PromptAttachment[], queue?: boolean): Promise<void>;

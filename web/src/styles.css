@@ -12537,6 +12537,35 @@
 		overflow-wrap: anywhere;
 		word-break: break-word;
 	}
+	.interrupted-runs {
+		display: grid;
+		gap: 8px;
+		margin-top: 10px;
+		min-width: 0;
+		max-width: 100%;
+		max-height: 40vh;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		justify-items: start;
+	}
+	.interrupted-run {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px 10px;
+		width: 100%;
+		min-width: 0;
+		max-width: 100%;
+	}
+	.interrupted-run-title {
+		flex: 1 1 140px;
+		min-width: 0;
+		overflow-wrap: anywhere;
+		word-break: break-word;
+	}
+	.interrupted-run-error {
+		flex-basis: 100%;
+	}
 	.notice-close {
 		flex: none;
 		display: inline-flex;

@@ -891,6 +891,8 @@ export class ClientSession {
 	private readonly stateStore: ClientStateStore;
 	private convs = new Map<string, Conversation>();
 	private activeId = "";
+	private interruptedSubagentOffers = new Map<string, string>();
+	private resumingInterruptedSubagents = new Set<string>();
 	private convSeq = 0;
 	private pluginModelKeys = new Map<string, string>();
 	private sharedModelRuntime: Awaited<ReturnType<typeof createAgentSessionServices>>["modelRuntime"] | undefined;
@@ -2090,22 +2092,39 @@ export class ClientSession {
 		};
 	}
 
+	async resumeInterruptedSubagent(runId: string): Promise<{ ok: boolean; error?: string }> {
+		const parentId = this.interruptedSubagentOffers.get(runId);
+		if (!parentId) return { ok: false, error: "not_available" };
+		if (this.resumingInterruptedSubagents.has(runId)) return { ok: false, error: "running" };
+		this.resumingInterruptedSubagents.add(runId);
+		try {
+			const record = this.subagentLedger.read(runId);
+			if (!record || record.state !== "interrupted" || record.resumedBy) return { ok: false, error: "not_available" };
+			const result = await this.resumeSubagentRun(parentId, runId);
+			if (result.ok) this.interruptedSubagentOffers.delete(runId);
+			return { ok: result.ok, error: result.ok ? undefined : result.error };
+		} catch {
+			return { ok: false, error: "resume_failed" };
+		} finally {
+			this.resumingInterruptedSubagents.delete(runId);
+		}
+	}
 	/** 启动对账：把上一次进程留下的 running 标成 interrupted，并提示可以续跑。 */
 	async recoverSubagentRuns(): Promise<void> {
 		const ledger = this.subagentLedger;
 		if (!ledger.enabled) return;
 		const recovered = await ledger.recover();
 		if (recovered.length === 0) return;
-		const shown = recovered
-			.slice(0, 5)
-			.map((record) => `${record.title || record.type}（${record.runId.slice(0, 8)}）`)
-			.join("、");
-		const more = recovered.length > 5 ? ` 等 ${recovered.length} 个` : "";
+		for (const record of recovered) this.interruptedSubagentOffers.set(record.runId, this.activeId);
 		const notice: ServerMessage = {
 			type: "notice",
 			level: "warning",
-			text: `上次服务重启中断了 ${recovered.length} 个子代理运行：${shown}${more}。用 conversation(action="resume", runId="…") 带已知进度续跑，或 get_result 取已产出的证据。`,
-			textEn: `${recovered.length} subagent run(s) were interrupted by the last restart: ${shown}${more}. Use conversation(action="resume", runId="…") to relaunch with the recorded progress, or get_result for the evidence already produced.`,
+			text: `服务重启，${recovered.length} 个任务被中断。可选择恢复，或关闭提示暂不处理。`,
+			textEn: `${recovered.length} tasks were interrupted by the restart. Choose which to resume, or dismiss for now.`,
+			interruptedRuns: recovered.map((record) => ({
+				runId: record.runId,
+				title: (record.title || record.type).slice(0, 160),
+			})),
 		};
 		// 对账是异步的：已有客户端就直发，否则排队到下次 attach（别只塞 pendingNotices 等下一次连接）。
 		if (this.sinks?.size === 0) this.pendingNotices.push(notice);
