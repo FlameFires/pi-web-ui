@@ -931,7 +931,13 @@ export class ClientSession {
 		const dataDir = (this.stateStore as ClientStateStore | undefined)?.dataDir;
 		const sessionFile = this.sessionFileOfConversation(conv);
 		if (!dataDir || !sessionFile) return;
-		const marker = await interruptedMainRun(dataDir, sessionFile);
+		const children = [...this.interruptedSubagentOffers.entries()]
+			.filter(([, parentId]) => parentId === conv.id)
+			.map(([id]) => this.subagentLedger.read(id))
+			.filter((record): record is LedgerRunRecord => !!record && record.state === "interrupted" && !record.resumedBy);
+		const marker =
+			(await interruptedMainRun(dataDir, sessionFile)) ??
+			(children.length ? { title: conv.title || "Conversation", cwd: conv.cwd } : undefined);
 		if (!marker || resolve(marker.cwd) !== resolve(conv.cwd)) return;
 		const runId = `main:${conversationIdentity(conv)}`;
 		if (this.interruptedMainOffers.has(runId)) return;
@@ -941,7 +947,10 @@ export class ClientSession {
 			level: "warning",
 			text: `服务重启，会话「${marker.title}」的运行被中断。可选择恢复。`,
 			textEn: `The restart interrupted "${marker.title}". You can choose to resume.`,
-			interruptedRuns: [{ runId, title: marker.title }],
+			interruptedRuns: [
+				{ runId, title: marker.title },
+				...children.map((record) => ({ runId: record.runId, title: `↳ ${record.title || record.type}` })),
+			],
 		};
 		if (this.sinks?.size === 0) this.pendingNotices.push(notice);
 		else this.emit(notice);
@@ -2133,12 +2142,22 @@ export class ClientSession {
 			if (this.resumingInterruptedSubagents.has(runId)) return { ok: false, error: "running" };
 			this.resumingInterruptedSubagents.add(runId);
 			try {
+				const children = [...this.interruptedSubagentOffers.entries()]
+					.filter(([, parentId]) => parentId === conv.id)
+					.map(([id]) => this.subagentLedger.read(id))
+					.filter(
+						(record): record is LedgerRunRecord => !!record && record.state === "interrupted" && !record.resumedBy,
+					);
+				const recoveryContext =
+					children.length === 0
+						? ""
+						: `\n\nThe following child tasks of THIS conversation were interrupted by the restart. Inspect their recorded progress, then resume unfinished tasks using conversation(action="resume", runId=...). Do not spawn duplicate tasks or resume completed tasks. Keep all work in the original project.\n${JSON.stringify(children.map((record) => ({ runId: record.runId, title: record.title, cwd: record.cwd, outputTail: record.outputTail, sessionFile: record.sessionFile })))}`;
 				await this.prompt(
 					pick(
 						this.getLang(),
 						"继续完成服务重启前未完成的任务。先核对已有进度和工具结果，避免重复执行已完成的操作。",
 						"Continue the task interrupted by the service restart. Check existing progress and tool results before repeating completed actions.",
-					),
+					) + recoveryContext,
 					undefined,
 					false,
 					conv,
@@ -2181,6 +2200,8 @@ export class ClientSession {
 
 		if (recovered.length === 0) return;
 		for (const record of recovered) this.interruptedSubagentOffers.set(record.runId, parent.id);
+		await this.recoverMainRun(parent);
+		if ([...this.interruptedMainOffers.values()].includes(parent)) return;
 		const notice: ServerMessage = {
 			type: "notice",
 			level: "warning",
@@ -8878,6 +8899,7 @@ export class ClientSession {
 		thinkingWrap?: boolean;
 		toolsWrap?: boolean;
 		sessionChangedFilesEnabled?: boolean;
+		filePreviewRestoreEnabled?: boolean;
 		toolImagesEnabled?: boolean;
 		showForkedParentSessions?: boolean;
 		retainFinishedConversations?: boolean;

@@ -217,6 +217,7 @@ interface DshSettings {
 	thinkingWrap: boolean;
 	toolsWrap: boolean;
 	sessionChangedFilesEnabled?: boolean;
+	filePreviewRestoreEnabled?: boolean;
 	toolImagesEnabled: boolean;
 	keepRecentMessages: number;
 	showForkedParentSessions: boolean;
@@ -277,6 +278,7 @@ const DEFAULT_SETTINGS: DshSettings = {
 	thinkingWrap: false,
 	toolsWrap: true,
 	sessionChangedFilesEnabled: true,
+	filePreviewRestoreEnabled: true,
 	toolImagesEnabled: true,
 	keepRecentMessages: DEFAULT_KEEP_RECENT_MESSAGES,
 	showForkedParentSessions: false,
@@ -502,6 +504,7 @@ export class DshClientSession {
 				thinkingWrap: savedSettings.thinkingWrap,
 				toolsWrap: savedSettings.toolsWrap,
 				sessionChangedFilesEnabled: savedSettings.sessionChangedFilesEnabled ?? true,
+				filePreviewRestoreEnabled: savedSettings.filePreviewRestoreEnabled ?? true,
 				toolImagesEnabled: savedSettings.toolImagesEnabled ?? true,
 				keepRecentMessages: normalizeKeepRecentMessages(savedSettings.keepRecentMessages),
 				showForkedParentSessions: savedSettings.showForkedParentSessions ?? false,
@@ -3779,6 +3782,7 @@ export class DshClientSession {
 			thinkingWrap: this.settings.thinkingWrap,
 			toolsWrap: this.settings.toolsWrap,
 			sessionChangedFilesEnabled: this.settings.sessionChangedFilesEnabled,
+			filePreviewRestoreEnabled: this.settings.filePreviewRestoreEnabled,
 			toolImagesEnabled: this.settings.toolImagesEnabled,
 			keepRecentMessages: normalizeKeepRecentMessages(this.settings.keepRecentMessages),
 			showForkedParentSessions: this.settings.showForkedParentSessions ?? false,
@@ -3872,6 +3876,7 @@ export class DshClientSession {
 		thinkingWrap?: boolean;
 		toolsWrap?: boolean;
 		sessionChangedFilesEnabled?: boolean;
+		filePreviewRestoreEnabled?: boolean;
 		toolImagesEnabled?: boolean;
 		keepRecentMessages?: number;
 		showForkedParentSessions?: boolean;
@@ -3919,6 +3924,8 @@ export class DshClientSession {
 		if (partial.toolsWrap !== undefined) this.settings.toolsWrap = partial.toolsWrap;
 		if (partial.sessionChangedFilesEnabled !== undefined)
 			this.settings.sessionChangedFilesEnabled = partial.sessionChangedFilesEnabled;
+		if (partial.filePreviewRestoreEnabled !== undefined)
+			this.settings.filePreviewRestoreEnabled = partial.filePreviewRestoreEnabled;
 		if (partial.toolImagesEnabled !== undefined) this.settings.toolImagesEnabled = partial.toolImagesEnabled;
 		if (partial.keepRecentMessages !== undefined)
 			this.settings.keepRecentMessages = normalizeKeepRecentMessages(partial.keepRecentMessages);
@@ -3970,6 +3977,7 @@ export class DshClientSession {
 			thinkingWrap: this.settings.thinkingWrap,
 			toolsWrap: this.settings.toolsWrap,
 			sessionChangedFilesEnabled: this.settings.sessionChangedFilesEnabled,
+			filePreviewRestoreEnabled: this.settings.filePreviewRestoreEnabled,
 			toolImagesEnabled: this.settings.toolImagesEnabled,
 			keepRecentMessages: normalizeKeepRecentMessages(this.settings.keepRecentMessages),
 			showForkedParentSessions: this.settings.showForkedParentSessions ?? false,

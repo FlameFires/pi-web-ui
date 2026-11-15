@@ -947,6 +947,7 @@ export function handleSettingsMessage(
 				thinkingWrap: msg.thinkingWrap,
 				toolsWrap: msg.toolsWrap,
 				sessionChangedFilesEnabled: msg.sessionChangedFilesEnabled,
+				filePreviewRestoreEnabled: msg.filePreviewRestoreEnabled,
 				toolImagesEnabled: (msg as { toolImagesEnabled?: boolean }).toolImagesEnabled,
 				keepRecentMessages: (msg as { keepRecentMessages?: number }).keepRecentMessages,
 				reversePagination: (msg as { reversePagination?: boolean }).reversePagination,

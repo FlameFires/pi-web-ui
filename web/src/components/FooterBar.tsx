@@ -110,8 +110,10 @@ export function FooterBar({
 
 	return (
 		<footer className="statusbar">
-			<div className="statusbar-left">
-				{recentPreview && onReopenPreview && (
+			<div className="statusbar-left">{renderGroup(leftItems)}</div>
+			{centerItems.length > 0 && <div className="statusbar-center">{renderGroup(centerItems)}</div>}
+			<div className="statusbar-right">
+				{chat.settings?.filePreviewRestoreEnabled !== false && recentPreview && onReopenPreview && (
 					<button
 						type="button"
 						className="statusbar-preview"
@@ -131,10 +133,8 @@ export function FooterBar({
 					</button>
 				)}
 				{chat.settings?.sessionChangedFilesEnabled !== false && <SessionChangedFiles state={state} />}
-				{renderGroup(leftItems)}
+				{renderGroup(rightItems)}
 			</div>
-			{centerItems.length > 0 && <div className="statusbar-center">{renderGroup(centerItems)}</div>}
-			<div className="statusbar-right">{renderGroup(rightItems)}</div>
 			{editing && (
 				<ProjectPicker
 					open

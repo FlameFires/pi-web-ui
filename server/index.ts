@@ -1544,6 +1544,7 @@ export interface DispatchSession {
 		thinkingWrap?: boolean;
 		toolsWrap?: boolean;
 		sessionChangedFilesEnabled?: boolean;
+		filePreviewRestoreEnabled?: boolean;
 		toolImagesEnabled?: boolean;
 		keepRecentMessages?: number;
 		showForkedParentSessions?: boolean;

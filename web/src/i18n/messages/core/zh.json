@@ -1,4 +1,6 @@
 {
+	"filePreviewRestore.setting": "恢复文件预览",
+	"filePreviewRestore.settingDesc": "在状态栏右侧显示恢复最近文件预览的入口。",
 	"restartRecovery.resume": "恢复",
 	"restartRecovery.resumeAll": "全部恢复",
 	"restartRecovery.resuming": "正在恢复…",

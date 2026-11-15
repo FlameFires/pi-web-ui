@@ -545,6 +545,7 @@ export class SettingsService {
 				thinkingWrap: this.settings.thinkingWrap,
 				toolsWrap: this.settings.toolsWrap,
 				sessionChangedFilesEnabled: this.settings.sessionChangedFilesEnabled ?? true,
+				filePreviewRestoreEnabled: this.settings.filePreviewRestoreEnabled ?? true,
 				toolImagesEnabled: this.settings.toolImagesEnabled ?? true,
 				keepRecentMessages: normalizeKeepRecentMessages(this.settings.keepRecentMessages),
 				reversePagination: this.settings.reversePagination ?? false,
@@ -685,6 +686,7 @@ export class SettingsService {
 		thinkingWrap?: boolean;
 		toolsWrap?: boolean;
 		sessionChangedFilesEnabled?: boolean;
+		filePreviewRestoreEnabled?: boolean;
 		toolImagesEnabled?: boolean;
 		keepRecentMessages?: number;
 		reversePagination?: boolean;
@@ -874,6 +876,9 @@ export class SettingsService {
 		}
 		if (typeof partial.sessionChangedFilesEnabled === "boolean") {
 			next.sessionChangedFilesEnabled = partial.sessionChangedFilesEnabled;
+		}
+		if (typeof partial.filePreviewRestoreEnabled === "boolean") {
+			next.filePreviewRestoreEnabled = partial.filePreviewRestoreEnabled;
 		}
 		if (partial.toolsWrap !== undefined) {
 			next.toolsWrap = partial.toolsWrap;

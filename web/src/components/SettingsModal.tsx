@@ -607,6 +607,7 @@ interface SettingsPatch extends QuickAskPatch {
 	thinkingWrap?: boolean;
 	toolsWrap?: boolean;
 	sessionChangedFilesEnabled?: boolean;
+	filePreviewRestoreEnabled?: boolean;
 	toolImagesEnabled?: boolean;
 	keepRecentMessages?: number;
 	reversePagination?: boolean;
@@ -4539,6 +4540,14 @@ function LoadedSettingsModal({
 										}}
 									/>
 								</FieldRow>
+								<ToggleRow
+									title={t("filePreviewRestore.setting")}
+									tip={t("filePreviewRestore.settingDesc")}
+									enabled={settings.filePreviewRestoreEnabled ?? true}
+									onToggle={() =>
+										setPartial({ filePreviewRestoreEnabled: !(settings.filePreviewRestoreEnabled ?? true) })
+									}
+								/>
 								<ToggleRow
 									title={t("sessionFiles.setting")}
 									tip={t("sessionFiles.settingDesc")}
