@@ -8921,6 +8921,10 @@
 		padding: 0 4px;
 		line-height: 1;
 	}
+	.statusbar [data-bar-item="host:search"] .bar-item-text {
+		display: block;
+		line-height: 18px;
+	}
 	.statusbar [data-bar-item="host:search"] .bar-item-icon {
 		display: block;
 		flex: none;
