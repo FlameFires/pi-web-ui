@@ -89,9 +89,14 @@ function SessionFilesPanel({
 		ledger.request(path);
 	};
 	useEffect(() => {
-		if (!ledger.page) return;
-		for (const path of expanded) if (!ledger.contents[path]) requestDetail(path);
+		const page = ledger.page;
+		if (!page) return;
+		const visible = new Set(page.files.map((item) => item.path));
+		for (const path of expanded) if (visible.has(path) && !ledger.contents[path]) requestDetail(path);
 	}, [expanded, ledger.page, ledger.contents]);
+	useEffect(() => {
+		if (ledger.error) requested.current.clear();
+	}, [ledger.error]);
 	useEffect(() => {
 		panelRef.current?.focus({ preventScroll: true });
 		return () => {
@@ -151,10 +156,12 @@ function SessionFilesPanel({
 				{files.map((file) => (
 					<details
 						key={file.path}
+						open={expanded.has(file.path)}
 						className={`session-files-item${file.status !== "present" ? ` is-${file.status}` : ""}`}
 					>
 						<summary
-							onClick={() => {
+							onClick={(event) => {
+								event.preventDefault();
 								if (!expanded.has(file.path)) requestDetail(file.path);
 								setExpanded((previous) => {
 									const next = new Set(previous);

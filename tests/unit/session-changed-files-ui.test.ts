@@ -179,6 +179,7 @@ it("remembers expanded files across panel reopen and collapses them all", () => 
 	expect(document.querySelector(".session-files-panel")).toBeNull();
 	click(".session-files-trigger");
 	reply(latestRequest());
+	expect(document.querySelector("details")?.open).toBe(true);
 	expect(latestRequest().path).toBe(file.path);
 	reply(latestRequest());
 	expect(document.querySelector(".session-files-detail")?.textContent).toContain("Sample");
@@ -201,4 +202,5 @@ it("expands every persisted file from the panel header", () => {
 	expect(requests.filter((request) => request.path).map((request) => request.path)).toEqual(["docs/a.md", "docs/b.md"]);
 	for (const request of requests.filter((item) => item.path)) reply(request);
 	expect(document.querySelectorAll(".session-files-detail")).toHaveLength(2);
+	expect([...document.querySelectorAll("details")].every((item) => item.open)).toBe(true);
 });
