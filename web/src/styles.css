@@ -9088,6 +9088,10 @@
 		color: var(--text-faint);
 		cursor: help;
 	}
+	.session-files-help svg {
+		width: 13px;
+		height: 13px;
+	}
 	.session-files-help:hover,
 	.session-files-help:focus-visible {
 		color: var(--text);
