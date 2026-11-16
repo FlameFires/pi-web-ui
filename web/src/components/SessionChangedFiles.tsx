@@ -227,7 +227,7 @@ function LedgerEvidence({ path, ledger }: { path: string; ledger: ReturnType<typ
 		<>
 			{page.cumulative.status === "exact" ? (
 				<>
-					<strong>{t("sessionFiles.cumulative")}</strong>
+					<strong className="session-files-cumulative-label">{t("sessionFiles.cumulative")}</strong>
 					<pre>{page.cumulative.patch || t("sessionFiles.noNetChange")}</pre>
 					{page.cumulative.nextOffset !== undefined && (
 						<button

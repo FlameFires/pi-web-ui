@@ -9000,7 +9000,7 @@
 	}
 	.session-files-panel {
 		width: min(480px, calc(100vw - 32px));
-		height: min(340px, calc(100vh - 120px));
+		height: min(420px, calc(100vh - 120px));
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
@@ -9044,6 +9044,7 @@
 		flex: none;
 		display: flex;
 		align-items: center;
+		justify-content: flex-end;
 		gap: 8px;
 		padding-bottom: 4px;
 		border-bottom: 1px solid var(--border);
@@ -9051,6 +9052,7 @@
 	.session-files-title {
 		flex: 0 1 auto;
 		min-width: 0;
+		margin-right: auto;
 		font-size: 12px;
 		font-weight: 600;
 		color: var(--text);
@@ -9080,7 +9082,7 @@
 		flex: none;
 		display: inline-flex;
 		align-items: center;
-		margin-left: auto;
+		margin-left: 0;
 		color: var(--text-faint);
 		cursor: help;
 	}
@@ -9124,6 +9126,9 @@
 		overscroll-behavior: contain;
 		padding-right: 2px;
 	}
+	.session-files-list .session-files-item:first-child {
+		border-top: none;
+	}
 	.session-files-note,
 	.session-files-empty {
 		margin: 2px 0;
@@ -9134,22 +9139,39 @@
 		border-top: 1px solid var(--border);
 	}
 	.session-files-item summary {
-		padding: 12px 0;
+		padding: 8px 0;
+		font-size: 12px;
+		line-height: 1.5;
 		cursor: pointer;
 	}
 	.session-files-item summary > svg,
-	.session-files-item summary > span:last-child {
+	.session-files-item summary > button,
+	.session-files-item summary > span:not(.session-files-path) {
 		flex-shrink: 0;
+		white-space: nowrap;
 	}
 	.session-files-path {
 		flex: 1;
-		overflow-wrap: anywhere;
-		word-break: break-word;
+		min-width: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.session-files-detail {
 		padding-bottom: 12px;
 		min-width: 0;
 		max-width: 100%;
+	}
+	.session-files-cumulative-label {
+		display: block;
+		margin-bottom: 4px;
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--text-dim);
+	}
+	.session-files-detail pre {
+		max-height: 200px;
+		overflow: auto;
 	}
 	.session-files-operation {
 		margin-top: 12px;
