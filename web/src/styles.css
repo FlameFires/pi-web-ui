@@ -9044,10 +9044,12 @@
 		flex: none;
 		display: flex;
 		align-items: center;
-		justify-content: flex-end;
-		gap: 8px;
+		gap: 6px;
 		padding-bottom: 4px;
 		border-bottom: 1px solid var(--border);
+	}
+	.session-files-heading .cwd-close {
+		margin-left: 0;
 	}
 	.session-files-title {
 		flex: 0 1 auto;
@@ -9170,8 +9172,16 @@
 		color: var(--text-dim);
 	}
 	.session-files-detail pre {
+		max-width: 100%;
 		max-height: 200px;
+		margin: 4px 0 0;
+		padding: 6px 8px;
+		border: 1px solid var(--border-soft);
+		border-radius: 5px;
+		background: var(--bg);
 		overflow: auto;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
 	}
 	.session-files-operation {
 		margin-top: 12px;
