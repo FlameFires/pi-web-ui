@@ -72,6 +72,7 @@ function latestRequest() {
 	return requests[requests.length - 1];
 }
 beforeEach(() => {
+	window.localStorage.clear();
 	requests = [];
 	setAppSend((message) => {
 		if (message.type === "session_file_ledger") requests.push(message);
@@ -79,6 +80,7 @@ beforeEach(() => {
 	});
 });
 afterEach(() => {
+	window.localStorage.clear();
 	act(() => root.unmount());
 	root = createRoot(container);
 	registerFilePreviewHost(null);
@@ -165,4 +167,38 @@ it("shows a persisted deleted file as historical-only and hides its current prev
 	expect(document.querySelector(".session-files-preview")).toBeNull();
 	expect(document.querySelector(".session-files-detail")?.textContent).toContain("Sample");
 	expect(document.querySelector(".session-files-detail")?.textContent).toContain("removed");
+});
+it("remembers expanded files across panel reopen and collapses them all", () => {
+	render();
+	click(".session-files-trigger");
+	reply(latestRequest());
+	click("summary");
+	reply(latestRequest());
+	expect(document.querySelector(".session-files-detail")).not.toBeNull();
+	click(".cwd-close");
+	expect(document.querySelector(".session-files-panel")).toBeNull();
+	click(".session-files-trigger");
+	reply(latestRequest());
+	expect(latestRequest().path).toBe(file.path);
+	reply(latestRequest());
+	expect(document.querySelector(".session-files-detail")?.textContent).toContain("Sample");
+	const collapseAll = document.querySelectorAll<HTMLElement>(".session-files-icon-btn")[1];
+	act(() => collapseAll.click());
+	expect(document.querySelector(".session-files-detail")).toBeNull();
+	expect(document.querySelectorAll(".session-files-detail")).toHaveLength(0);
+});
+
+it("expands every persisted file from the panel header", () => {
+	render();
+	click(".session-files-trigger");
+	reply(latestRequest(), {
+		files: [
+			{ ...file, path: "docs/a.md" },
+			{ ...file, path: "docs/b.md", operationCount: 2 },
+		],
+	});
+	click(".session-files-icon-btn");
+	expect(requests.filter((request) => request.path).map((request) => request.path)).toEqual(["docs/a.md", "docs/b.md"]);
+	for (const request of requests.filter((item) => item.path)) reply(request);
+	expect(document.querySelectorAll(".session-files-detail")).toHaveLength(2);
 });

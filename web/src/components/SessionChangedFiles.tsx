@@ -1,12 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FiAlertCircle, FiFileText, FiHelpCircle, FiRefreshCw, FiX } from "react-icons/fi";
+import {
+	FiAlertCircle,
+	FiChevronsDown,
+	FiChevronsUp,
+	FiFileText,
+	FiHelpCircle,
+	FiRefreshCw,
+	FiX,
+} from "react-icons/fi";
 import type { UiState } from "../types";
 import { useT } from "../i18n";
 import { useFloatingPanel } from "../use-floating-panel";
 import { useOverlayZIndex } from "../overlay-stack";
 import type { SessionChangedFile } from "../session-changed-files";
 import { useSessionFileLedger } from "../use-session-file-ledger";
+import { readExpandedPaths, writeExpandedPaths } from "../session-files-expanded";
 import { openFilePreview } from "../file-preview-bridge";
 import { FileChangeCard } from "./FileChangeCard";
 
@@ -34,6 +43,7 @@ export function SessionChangedFiles({ state }: { state: UiState }) {
 			{open && (
 				<SessionFilesPanel
 					key={`${state.sessionId}:${state.cwd}`}
+					scope={ledgerScope(state)}
 					files={files}
 					anchor={anchor.current}
 					partial={ledger.page?.coverage !== "available-transcript"}
@@ -45,13 +55,19 @@ export function SessionChangedFiles({ state }: { state: UiState }) {
 	);
 }
 
+function ledgerScope(state: UiState): string {
+	return state.sessionFile ? `${state.sessionFile}\0${state.cwd}` : "";
+}
+
 function SessionFilesPanel({
+	scope,
 	files,
 	anchor,
 	partial,
 	ledger,
 	onClose,
 }: {
+	scope: string;
 	files: (SessionChangedFile & { operationCount: number })[];
 	anchor: HTMLElement | null;
 	partial: boolean;
@@ -61,8 +77,21 @@ function SessionFilesPanel({
 	const t = useT();
 	const { panelRef, style, measure } = useFloatingPanel({ anchor, side: "top", align: "right", onClose });
 	const zIndex = useOverlayZIndex();
-	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+	const [expanded, setExpanded] = useState<Set<string>>(() => new Set(readExpandedPaths(scope)));
+	const requested = useRef(new Set<string>());
 	const help = partial ? `${t("sessionFiles.scope")}\n${t("sessionFiles.partial")}` : t("sessionFiles.scope");
+	useEffect(() => {
+		writeExpandedPaths(scope, expanded);
+	}, [expanded, scope]);
+	const requestDetail = (path: string) => {
+		if (requested.current.has(path)) return;
+		requested.current.add(path);
+		ledger.request(path);
+	};
+	useEffect(() => {
+		if (!ledger.page) return;
+		for (const path of expanded) if (!ledger.contents[path]) requestDetail(path);
+	}, [expanded, ledger.page, ledger.contents]);
 	useEffect(() => {
 		panelRef.current?.focus({ preventScroll: true });
 		return () => {
@@ -86,6 +115,30 @@ function SessionFilesPanel({
 		>
 			<div className="session-files-heading">
 				<strong className="session-files-title">{t("sessionFiles.title")}</strong>
+				<button
+					type="button"
+					className="session-files-icon-btn"
+					disabled={!files.length}
+					onClick={() => {
+						const next = new Set(files.map((file) => file.path));
+						for (const path of next) requestDetail(path);
+						setExpanded(next);
+					}}
+					title={t("sessionFiles.expandAll")}
+					aria-label={t("sessionFiles.expandAll")}
+				>
+					<FiChevronsDown aria-hidden="true" />
+				</button>
+				<button
+					type="button"
+					className="session-files-icon-btn"
+					disabled={!expanded.size}
+					onClick={() => setExpanded(new Set())}
+					title={t("sessionFiles.collapseAll")}
+					aria-label={t("sessionFiles.collapseAll")}
+				>
+					<FiChevronsUp aria-hidden="true" />
+				</button>
 				<span className="session-files-help" title={help} aria-label={help} role="img" tabIndex={0}>
 					<FiHelpCircle aria-hidden="true" />
 				</span>
@@ -102,7 +155,7 @@ function SessionFilesPanel({
 					>
 						<summary
 							onClick={() => {
-								if (!expanded.has(file.path)) ledger.request(file.path);
+								if (!expanded.has(file.path)) requestDetail(file.path);
 								setExpanded((previous) => {
 									const next = new Set(previous);
 									if (next.has(file.path)) next.delete(file.path);
