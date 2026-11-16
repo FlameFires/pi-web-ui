@@ -28,6 +28,8 @@
 		"sessionFiles.cumulativeUnavailable": "Cumulative diff unavailable: complete first-before and latest-after evidence is missing. Each operation shows only its recorded patch ranges.",
 		"sessionFiles.cumulativeUnavailableShort": "Cumulative diff unavailable",
 		"sessionFiles.loadMore": "Next page",
+		"sessionFiles.expandAll": "Expand all",
+		"sessionFiles.collapseAll": "Collapse all",
 		"sessionFiles.rawDetail": "View recorded payload",
 		"sessionFiles.firstPage": "First page / Retry",
 		"sessionFiles.cumulative": "Cumulative diff (paged)",

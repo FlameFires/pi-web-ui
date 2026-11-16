@@ -28,6 +28,8 @@
 		"sessionFiles.cumulativeUnavailable": "累计差异不可用：缺少完整的首次修改前与最新修改后证据。各次操作只展示已记录补丁覆盖的范围。",
 		"sessionFiles.cumulativeUnavailableShort": "累计差异不可用",
 		"sessionFiles.loadMore": "下一页",
+		"sessionFiles.expandAll": "全部展开",
+		"sessionFiles.collapseAll": "全部收起",
 		"sessionFiles.rawDetail": "查看记录原文",
 		"sessionFiles.firstPage": "首页 / 重试",
 		"sessionFiles.cumulative": "累计差异（分页）",
