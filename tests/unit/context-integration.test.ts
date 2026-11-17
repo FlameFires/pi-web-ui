@@ -229,6 +229,7 @@ it.each(["fallback", "composeWith"])(
 				Object.fromEntries(
 					[
 						"awaitPendingWorkspaceSnapshot",
+						"withFileLedger",
 						"planModeOf",
 						"delegateModeOf",
 						"goalReviewTurnOf",

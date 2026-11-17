@@ -1,4 +1,5 @@
 import { deviceLabel } from "./device-label.js";
+import { legacyHubHosts } from "./hub-origins.js";
 import { randomBytes, randomUUID } from "node:crypto";
 import { parseReportMetadata } from "./report-metadata.js";
 import { computeLegacyOutcomeFingerprint } from "./task-outcome.js";
@@ -34,6 +35,18 @@ export const RELAY_LIMITS = {
 	devices: 128,
 	sessions: 2048,
 };
+/** The hub owns the browser P2P session lifetime; the device's grant is only an upper bound. */
+const BROWSER_SESSION_MAX = 30 * 60_000;
+/** Devices report their own clock, so a grant needs bounded skew before it counts as dead. */
+const BROWSER_SESSION_SKEW = 60_000;
+/**
+ * Devices answer with the expiry of their own LAN grant, computed on the device clock, while the
+ * grant TTL equals the hub cap. Any positive clock drift therefore lands just past `now + cap`;
+ * clamping keeps such a healthy direct connection instead of failing it back to the hub relay.
+ */
+export function browserSessionExpiry(deviceExpiresAt: number, now = Date.now()) {
+	return Math.min(deviceExpiresAt, now + BROWSER_SESSION_MAX);
+}
 export type RelayFrame = { type: string; id?: string; [key: string]: unknown };
 export function loopback(host: string) {
 	return host === "localhost" || host.endsWith(".localhost") || host === "127.0.0.1" || host === "[::1]";
@@ -145,6 +158,7 @@ export function safePath(path: unknown, method = "GET"): path is string {
 export const COMMANDS = [
 	"device_lan",
 	"device_p2p",
+	"device_browser_p2p",
 	"group_router_models",
 	"transfer_stage",
 	"transfer_preview",
@@ -512,6 +526,7 @@ export function createWsMessageChannel(transport: WebSocket) {
 export interface DeviceRelayOptions {
 	server: Server;
 	publicUrl: string;
+	legacyOrigins?: string[];
 	deviceDomain?: string;
 	pathAccess?: boolean;
 	deviceOrigins?: () => ReadonlyMap<string, string>;
@@ -558,6 +573,7 @@ export interface RelayTaskBinding {
 
 export function createDeviceRelay(options: DeviceRelayOptions) {
 	const hub = checkedUrl(options.publicUrl);
+	const legacyHosts = legacyHubHosts(options.legacyOrigins);
 	const domain = options.deviceDomain?.toLowerCase();
 	if (domain !== undefined) {
 		if (!/^[a-z0-9.-]+(?::\d+)?$/.test(domain)) throw new Error("Invalid device domain");
@@ -624,6 +640,8 @@ export function createDeviceRelay(options: DeviceRelayOptions) {
 			expiresAt: number;
 			nativeOrigin?: NativeOrigin;
 			isSessionActive?: () => boolean;
+			browserSession?: string;
+			browserPending?: boolean;
 		}
 	>();
 	const nativeSockets = new Map<WebSocket, () => Promise<boolean>>();
@@ -862,6 +880,9 @@ export function createDeviceRelay(options: DeviceRelayOptions) {
 			"hub",
 			undefined,
 			hub.origin + capabilityBase(id, token) + "__desktop_open",
+			undefined,
+			undefined,
+			hub.origin + capabilityBase(id, token) + "__browser_p2p",
 		);
 		res
 			.writeHead(200, {
@@ -968,6 +989,124 @@ export function createDeviceRelay(options: DeviceRelayOptions) {
 					location: isDesktop ? nextDesktop : "/",
 				})
 				.end();
+			return true;
+		}
+		if (path?.path === "/__browser_p2p") {
+			const generation = revision,
+				grant = capabilities.get(path.token!),
+				entry = devices.get(id);
+			if (
+				!["POST", "OPTIONS"].includes(req.method || "") ||
+				![hub.origin, "null"].includes(req.headers.origin || "") ||
+				!grant ||
+				grant.nativeOrigin ||
+				grant.deviceId !== id ||
+				grant.expiresAt <= Date.now() ||
+				!entry ||
+				!(await options.ownsDevice(grant.accountId, id)) ||
+				closed ||
+				revision !== generation ||
+				capabilities.get(path.token!) !== grant ||
+				devices.get(id) !== entry
+			) {
+				res.writeHead(403).end();
+				return true;
+			}
+			if (req.headers.origin === "null") {
+				res.setHeader("Access-Control-Allow-Origin", "null");
+				res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+				res.setHeader("Access-Control-Allow-Headers", "content-type");
+			}
+			if (req.method === "OPTIONS") {
+				res.writeHead(204).end();
+				return true;
+			}
+			if (grant.browserPending) {
+				res.writeHead(409).end();
+				return true;
+			}
+			grant.browserPending = true;
+			const cancel = new AbortController();
+			const abort = () => cancel.abort();
+			res.once("close", abort);
+			const deadline = AbortSignal.any([cancel.signal, AbortSignal.timeout(15000)]);
+			const timeout = () => {
+				if (!res.headersSent) res.writeHead(504).end();
+				req.destroy();
+			};
+			deadline.addEventListener("abort", timeout, { once: true });
+			const valid = () =>
+				!closed &&
+				!deadline.aborted &&
+				revision === generation &&
+				capabilities.get(path.token!) === grant &&
+				grant.expiresAt > Date.now() &&
+				devices.get(id) === entry;
+			try {
+				const chunks: Buffer[] = [];
+				let bytes = 0;
+				for await (const part of req) {
+					bytes += part.length;
+					if (bytes > 40 * 1024) throw new Error("Signal too large");
+					chunks.push(part);
+				}
+				const value = JSON.parse(Buffer.concat(chunks).toString());
+				if (!valid() || (value?.close !== true && !validDeviceP2PSignal(value)))
+					throw new Error("Invalid browser signal");
+				// A delayed unload from an older page must not revoke the replacement connection.
+				if (value.close === true && value.session !== grant.browserSession) {
+					res.writeHead(204).end();
+					return true;
+				}
+				if (grant.browserSession) {
+					const session = grant.browserSession;
+					grant.browserSession = undefined;
+					await entry.rpc.call("device_browser_p2p", { op: "close", session }, { signal: deadline });
+				}
+				if (value.close === true) {
+					res.writeHead(204).end();
+					return true;
+				}
+				const answer: any = await entry.rpc.call(
+					"device_browser_p2p",
+					{ version: 1, sdp: value.sdp },
+					{ signal: deadline },
+				);
+				if (
+					!answer ||
+					answer.version !== 1 ||
+					!validDeviceP2PSignal(answer.signal) ||
+					typeof answer.key !== "string" ||
+					!/^[a-f0-9]{64}$/.test(answer.key) ||
+					!Number.isSafeInteger(answer.expiresAt) ||
+					answer.expiresAt <= Date.now() - BROWSER_SESSION_SKEW
+				)
+					throw new Error("Browser P2P unavailable");
+				// A device whose clock runs behind the hub would report an already-dead grant; tolerate
+				// bounded skew so clock differences alone never decide the outcome, then clamp to the cap.
+				const sessionExpiresAt = browserSessionExpiry(answer.expiresAt);
+				if (!valid()) {
+					void entry.rpc
+						.call("device_browser_p2p", { op: "close", session: answer.key }, { signal: AbortSignal.timeout(3000) })
+						.catch(() => {});
+					throw new Error("Browser P2P cancelled");
+				}
+				grant.browserSession = answer.key;
+				res.writeHead(200, { "content-type": "application/json" }).end(
+					JSON.stringify({
+						version: 1,
+						signal: { version: 1, sdp: answer.signal.sdp },
+						key: answer.key,
+						expiresAt: sessionExpiresAt,
+					}),
+				);
+			} catch {
+				if (!res.headersSent && !res.destroyed) res.writeHead(503).end();
+			} finally {
+				grant.browserPending = false;
+				res.off("close", abort);
+				deadline.removeEventListener("abort", timeout);
+			}
 			return true;
 		}
 		if (path?.path === "/__desktop_devices") {
@@ -1119,6 +1258,7 @@ export function createDeviceRelay(options: DeviceRelayOptions) {
 							rewriteHtml,
 							requestNativeOrigin,
 							requestNativeOrigin ? nativeResourceContentType(forwardPath!, req.method || "GET") : undefined,
+							!requestNativeOrigin,
 						),
 					}
 				: {}),
@@ -1221,7 +1361,7 @@ export function createDeviceRelay(options: DeviceRelayOptions) {
 		try {
 			if (
 				closed ||
-				req.headers.host !== hub.host ||
+				(req.headers.host !== hub.host && !legacyHosts.has(req.headers.host ?? "")) ||
 				req.headers.origin ||
 				!/^[a-z0-9][a-z0-9-]{0,62}$/.test(device) ||
 				!credential ||
