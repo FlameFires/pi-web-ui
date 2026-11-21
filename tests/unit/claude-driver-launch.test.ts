@@ -28,6 +28,8 @@ function setup(executablePath?: string) {
 		stdin: new PassThrough(),
 		stdout: new PassThrough(),
 		stderr: new PassThrough(),
+		// Real ChildProcess has kill(); forkSession relies on it.
+		kill: vi.fn(),
 	});
 	spawnMock.mockReturnValue(child);
 	const sink = {
@@ -38,6 +40,8 @@ function setup(executablePath?: string) {
 		onTurnComplete: vi.fn(),
 		onError: vi.fn(),
 		onApprovalRequest: vi.fn(),
+		// Explicit opt-in: a bare sink must not be treated as having an approval channel.
+		supportsApproval: true,
 	};
 	const driver = new ClaudeCodeDriver(workspace, { executablePath, agentDir });
 	return { child, sink, driver };
@@ -283,6 +287,47 @@ describe("Claude Code permission bridge", () => {
 		await done;
 	});
 
+	it("denies instead of hanging when the sink has no approval channel (subagent case)", async () => {
+		const { child, driver } = setup();
+		// A subagent sink: no `supportsApproval`, no `onApprovalRequest`.
+		const bareSink = {
+			onTextDelta: vi.fn(),
+			onThinkingDelta: vi.fn(),
+			onToolStart: vi.fn(),
+			onToolEnd: vi.fn(),
+			onTurnComplete: vi.fn(),
+			onError: vi.fn(),
+		} as unknown as Parameters<typeof driver.sendPrompt>[2];
+		let written = "";
+		child.stdin.on("data", (chunk) => {
+			written += chunk.toString();
+		});
+		const done = driver.sendPrompt("hi", undefined, bareSink);
+		written = "";
+
+		child.stdout.write(
+			`${JSON.stringify({
+				type: "control_request",
+				request_id: "req-bare",
+				request: { subtype: "can_use_tool", tool_name: "Bash", input: { command: "ls" } },
+			})}\n`,
+		);
+		await new Promise((resolve) => setTimeout(resolve, 20));
+
+		// Must auto-deny rather than wait for a human that will never answer.
+		expect(JSON.parse(written.trim())).toEqual({
+			type: "control_response",
+			response: {
+				subtype: "success",
+				request_id: "req-bare",
+				response: { behavior: "deny", message: "no approval channel" },
+			},
+		});
+
+		child.emit("close", 0);
+		await done;
+	});
+
 	it("acknowledges non-permission control requests so the CLI never blocks", async () => {
 		const { child, sink, driver } = setup();
 		let written = "";
@@ -394,5 +439,60 @@ describe("Claude Code permission bridge", () => {
 			delete process.env.PI_WEB_CLAUDE_PERMISSION_MODE;
 			delete process.env.PI_WEB_CLAUDE_PERMISSION_PROMPTS;
 		}
+	});
+});
+
+describe("Claude Code session fork", () => {
+	it("resumes with --fork-session and returns the new session id from init", async () => {
+		const { child, driver } = setup();
+		const forkPromise = driver.forkSession("old-session-id");
+		child.stdout.write(`${JSON.stringify({ type: "system", subtype: "init", session_id: "new-session-id" })}\n`);
+		const newSid = await forkPromise;
+
+		expect(newSid).toBe("new-session-id");
+		const [, args] = spawnMock.mock.calls[0];
+		expect(args).toContain("--resume");
+		expect(args).toContain("old-session-id");
+		expect(args).toContain("--fork-session");
+		expect(child.kill).toHaveBeenCalled();
+	});
+
+	it("stays quiet when init arrives first, so the fork transcript has no probe turn", async () => {
+		const { child, driver } = setup();
+		let written = "";
+		child.stdin.on("data", (chunk) => {
+			written += chunk.toString();
+		});
+		const forkPromise = driver.forkSession("old-session-id");
+		child.stdout.write(`${JSON.stringify({ type: "system", subtype: "init", session_id: "new-session-id" })}\n`);
+
+		await expect(forkPromise).resolves.toBe("new-session-id");
+		expect(written).toBe("");
+	});
+
+	it("sends a probe turn for CLIs that only report init once a turn starts", async () => {
+		// Fake only the grace timer: readline scheduling rides on setImmediate.
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		try {
+			const { child, driver } = setup();
+			let written = "";
+			child.stdin.on("data", (chunk) => {
+				written += chunk.toString();
+			});
+			const forkPromise = driver.forkSession("old-session-id");
+			await vi.advanceTimersByTimeAsync(1_500);
+
+			expect(JSON.parse(written.trim())).toMatchObject({ type: "user" });
+
+			child.stdout.write(`${JSON.stringify({ type: "system", subtype: "init", session_id: "new-session-id" })}\n`);
+			await expect(forkPromise).resolves.toBe("new-session-id");
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("returns empty string when there is no session id", async () => {
+		const { driver } = setup();
+		await expect(driver.forkSession("")).resolves.toBe("");
 	});
 });

@@ -1,10 +1,11 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import type { Writable } from "node:stream";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { probeEngineCliVersion, resolveEngineCliLaunch } from "../../engine-cli.js";
+import { killPidTree } from "../../process-utils.js";
 import { BaseAgentDriver, type AgentCapabilities, type AgentEventSink, type AgentTurnMeta } from "../driver-base.js";
 import type { PromptAttachment, SlashCommandInfo } from "../../protocol.js";
 import {
@@ -17,9 +18,19 @@ import {
 import { discoverDiskSkills } from "../../skill-discovery.js";
 import { decodeInlineImage, describeCliAttachment } from "../universal-attachments.js";
 import { collectEnabledMcpServers, toClaudeMcpConfig } from "../engine-mcp.js";
+import { spawnChildPiped, type SpawnedChild } from "../../spawn-child.js";
 
 /** Legal values of Claude Code's `--permission-mode` (there is no "default"). */
 const CLAUDE_PERMISSION_MODES = ["acceptEdits", "auto", "manual", "dontAsk", "plan", "bypassPermissions"] as const;
+
+/**
+ * How long `forkSession` waits for `system/init` before poking the CLI with a throwaway turn.
+ * CLIs that report the new session id at startup never need the poke, which keeps the forked
+ * transcript free of a meaningless user message.
+ */
+const FORK_PROBE_GRACE_MS = 1_500;
+/** Hard cap for the fork handshake: past this the caller gets "" and forks without an engine id. */
+const FORK_TIMEOUT_MS = 15_000;
 
 /**
  * Default mode. Stays `bypassPermissions` on purpose: that is what the engine did before the
@@ -139,7 +150,9 @@ export class ClaudeCodeDriver extends BaseAgentDriver {
 	readonly name = "Claude Code";
 	readonly maxInlineImageBytes = CLAUDE_MAX_INLINE_IMAGE_BYTES;
 	readonly capabilities: AgentCapabilities = {
-		supportsTreeFork: false,
+		// `forkSession` forks the CLI transcript, so the fork point is the end of it rather than
+		// the message the UI forked from — close enough for the tree-fork entry, hence `true`.
+		supportsTreeFork: true,
 		supportsHistoryEdit: false,
 		supportsToolPromptOverride: false,
 		supportsModelSwitch: true,
@@ -153,7 +166,8 @@ export class ClaudeCodeDriver extends BaseAgentDriver {
 	private readonly dataDir: string | undefined;
 	private currentModel: string;
 	private activeSessionId: string | null = null;
-	private activeProcess: ChildProcess | null = null;
+	private activeProcess: ChildProcessWithoutNullStreams | null = null;
+	private activeStop: SpawnedChild["stop"] | null = null;
 	private aborted = false;
 	private turnSeq = 0;
 	private lastErrorHint = "";
@@ -204,6 +218,111 @@ export class ClaudeCodeDriver extends BaseAgentDriver {
 
 	async resumeSession(sessionId: string): Promise<void> {
 		this.activeSessionId = sessionId || null;
+	}
+
+	/**
+	 * Fork an existing CLI session into a new session id (tree-fork from the UI).
+	 *
+	 * The CLI forks the transcript it resumes, so the fork point is the END of the engine
+	 * history, not the message the UI forked from: forking from an earlier message leaves the
+	 * model with a superset of the cloned UI messages.
+	 */
+	async forkSession(sessionId: string): Promise<string> {
+		if (!sessionId) return "";
+		const args = [
+			"-p",
+			"--input-format",
+			"stream-json",
+			"--output-format",
+			"stream-json",
+			"--verbose",
+			"--resume",
+			sessionId,
+			"--fork-session",
+			...this.staticExtraArgs,
+			...buildPermissionArgs(),
+		];
+
+		let isOfficial = true;
+		let targetProvider: string | null = null;
+		if (this.currentModel.includes("/")) {
+			const slash = this.currentModel.indexOf("/");
+			const provider = this.currentModel.slice(0, slash);
+			if (provider !== "claude-code") {
+				isOfficial = false;
+				targetProvider = provider;
+			}
+		}
+		const launch = resolveEngineCliLaunch("claude", { executablePath: this.executablePath, cwd: this.cwd });
+		const proc = spawnChildPiped({
+			cmd: launch.file,
+			args: [...launch.args, ...args],
+			cwd: this.cwd,
+			env: this.buildSpawnEnv(isOfficial, targetProvider),
+		}).child;
+
+		return new Promise<string>((resolve) => {
+			let newSid = "";
+			let done = false;
+			let probe: NodeJS.Timeout | null = null;
+			const kill = () => {
+				// The CLI spawns children of its own (MCP servers, hooks), so take the whole tree with
+				// it; the direct handle only covers a spawn that never got a pid.
+				if (proc.pid) void killPidTree(proc.pid);
+				else {
+					try {
+						proc.kill();
+					} catch {}
+				}
+			};
+			const finish = () => {
+				if (done) return;
+				done = true;
+				clearTimeout(timer);
+				if (probe) clearTimeout(probe);
+				resolve(newSid);
+			};
+			const timer = setTimeout(() => {
+				kill();
+				finish();
+			}, FORK_TIMEOUT_MS);
+
+			if (proc.stdout) {
+				const rl = createInterface({ input: proc.stdout, terminal: false });
+				rl.on("line", (line) => {
+					const trimmed = line.trim();
+					if (!trimmed.startsWith("{")) return;
+					try {
+						const event = JSON.parse(trimmed) as Record<string, unknown>;
+						if (
+							event.type === "system" &&
+							event.subtype === "init" &&
+							typeof event.session_id === "string" &&
+							event.session_id
+						) {
+							newSid = event.session_id;
+							// Got the fork target: we don't need the CLI to finish a turn.
+							kill();
+							finish();
+						}
+					} catch {}
+				});
+			}
+			proc.on("close", finish);
+			proc.on("error", finish);
+			if (!proc.stdin) return;
+			proc.stdin.on("error", () => {});
+			// The fork happens while the CLI loads the resumed session and the new id arrives in
+			// `system/init` — usually before any input, so staying quiet keeps the forked transcript
+			// clean. The probe turn is only for CLIs that report init once a turn starts.
+			probe = setTimeout(() => {
+				if (done) return;
+				proc.stdin?.write(
+					`${JSON.stringify({ type: "user", message: { role: "user", content: [{ type: "text", text: "fork session" }] } })}\n`,
+				);
+				proc.stdin?.end();
+			}, FORK_PROBE_GRACE_MS);
+		});
 	}
 
 	getActiveSessionId(): string | null {
@@ -286,7 +405,7 @@ export class ClaudeCodeDriver extends BaseAgentDriver {
 			mcpDir = undefined;
 		};
 
-		let proc: ChildProcess;
+		let proc: ChildProcessWithoutNullStreams;
 		try {
 			const servers = collectEnabledMcpServers({ cwd: this.cwd, agentDir: this.agentDir, dataDir: this.dataDir });
 			if (Object.keys(servers).length > 0) {
@@ -298,19 +417,19 @@ export class ClaudeCodeDriver extends BaseAgentDriver {
 			}
 			const userMessage = this.buildUserMessage(prompt, attachments);
 			const launch = resolveEngineCliLaunch("claude", { executablePath: this.executablePath, cwd: this.cwd });
-			proc = spawn(launch.file, [...launch.args, ...args], {
+			const spawned = spawnChildPiped({
+				cmd: launch.file,
+				args: [...launch.args, ...args],
 				cwd: this.cwd,
 				env: this.buildSpawnEnv(isOfficial, targetProvider),
-				detached: process.platform !== "win32",
-				windowsHide: true,
 			});
-			if (proc.stdin) {
-				// Keep stdin open: in non-bypass modes the CLI asks for permission over stdin and
-				// finishes only after the turn's `result` event closes it (see handleClaudeEvent).
-				this.activeStdin = proc.stdin;
-				proc.stdin.on("error", () => {});
-				proc.stdin.write(`${JSON.stringify(userMessage)}\n`);
-			}
+			proc = spawned.child;
+			this.activeStop = spawned.stop;
+			// 保持 stdin 打开：非 bypass 模式下 CLI 通过 stdin 询问权限，
+			// 只有本回合的 result 事件到达后才关闭（见 handleClaudeEvent）。
+			this.activeStdin = proc.stdin;
+			proc.stdin.on("error", () => {});
+			proc.stdin.write(`${JSON.stringify(userMessage)}\n`);
 		} catch (err: unknown) {
 			cleanup();
 			const msg = err instanceof Error ? err.message : String(err);
@@ -349,7 +468,10 @@ export class ClaudeCodeDriver extends BaseAgentDriver {
 					resolve();
 					return;
 				}
-				if (this.activeProcess === proc) this.activeProcess = null;
+				if (this.activeProcess === proc) {
+					this.activeProcess = null;
+					this.activeStop = null;
+				}
 				if (!this.aborted) {
 					sink.onError(`Claude Code 进程启动失败: ${err.message}`);
 				}
@@ -364,7 +486,10 @@ export class ClaudeCodeDriver extends BaseAgentDriver {
 					resolve();
 					return;
 				}
-				if (this.activeProcess === proc) this.activeProcess = null;
+				if (this.activeProcess === proc) {
+					this.activeProcess = null;
+					this.activeStop = null;
+				}
 				if (this.aborted) {
 					resolve();
 					return;
@@ -419,7 +544,7 @@ export class ClaudeCodeDriver extends BaseAgentDriver {
 		const params = request.input && typeof request.input === "object" ? (request.input as Record<string, unknown>) : {};
 		const suggestions = Array.isArray(request.permission_suggestions) ? request.permission_suggestions : undefined;
 
-		if (typeof sink.onApprovalRequest !== "function") {
+		if (sink.supportsApproval !== true || typeof sink.onApprovalRequest !== "function") {
 			// No UI channel (subagent/headless): deny instead of hanging the turn forever.
 			void this.respondApproval(requestId, "deny", undefined, "no approval channel");
 			return;
@@ -612,19 +737,25 @@ export class ClaudeCodeDriver extends BaseAgentDriver {
 	async abort(): Promise<void> {
 		this.turnSeq++;
 		this.aborted = true;
-		if (this.activeProcess) {
+		const proc = this.activeProcess;
+		if (proc) {
+			const pid = proc.pid;
+			const stop = this.activeStop;
+			this.activeProcess = null;
+			this.activeStop = null;
 			try {
 				if (process.platform === "win32") {
-					spawn("taskkill", ["/pid", String(this.activeProcess.pid), "/t", "/f"], { windowsHide: true });
+					// 整棵树交给单源 stop()（taskkill /T /F），这里不等它：abort 保持原有的“尽力而为、不抛”语义。
+					if (stop) void stop().catch(() => {});
 				} else {
+					// POSIX：整组 SIGINT 是原有的优雅中断（不是杀树），保持原信号与原兜底。
 					try {
-						process.kill(-this.activeProcess.pid!, "SIGINT");
+						process.kill(-pid!, "SIGINT");
 					} catch {
-						this.activeProcess.kill("SIGINT");
+						proc.kill("SIGINT");
 					}
 				}
 			} catch {}
-			this.activeProcess = null;
 		}
 	}
 
